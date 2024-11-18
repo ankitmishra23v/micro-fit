@@ -1,4 +1,3 @@
-// /app/screens/gender-age/index.tsx
 import React, { useState } from "react";
 import {
   View,
@@ -12,11 +11,11 @@ import { useRouter } from "expo-router";
 const GenderAgeScreen = () => {
   const [gender, setGender] = useState("");
   const [age, setAge] = useState("");
-  const router = useRouter(); // Use the router for navigation
+  const router = useRouter();
 
   const handleNext = () => {
     if (gender && age) {
-      router.push("/reminders"); // Navigate to the next screen (Turn On Reminders)
+      router.push("/screens/signup/reminders");
     } else {
       alert("Please fill in all fields");
     }
@@ -24,54 +23,48 @@ const GenderAgeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text className="text-lg text-white ">Tell Us More About You</Text>
-
-      <Text style={styles.label}>What's your gender?</Text>
-      <View style={styles.radioGroup}>
-        <TouchableOpacity onPress={() => setGender("Male")}>
-          <Text
-            style={[
-              styles.radioText,
-              gender === "Male" && styles.selectedRadio,
-            ]}
-          >
-            Male
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setGender("Female")}>
-          <Text
-            style={[
-              styles.radioText,
-              gender === "Female" && styles.selectedRadio,
-            ]}
-          >
-            Female
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setGender("Other")}>
-          <Text
-            style={[
-              styles.radioText,
-              gender === "Other" && styles.selectedRadio,
-            ]}
-          >
-            Other
-          </Text>
-        </TouchableOpacity>
+      <Text style={styles.title}>Tell us more about you</Text>
+      <View style={styles.section}>
+        <Text style={styles.label}>What’s your gender?</Text>
+        <View style={styles.genderOptions}>
+          {["Male", "Female", "Other"].map((option) => (
+            <TouchableOpacity
+              key={option}
+              style={[
+                styles.genderButton,
+                gender === option && styles.genderButtonSelected,
+              ]}
+              onPress={() => setGender(option)}
+            >
+              <Text
+                style={[
+                  styles.genderButtonText,
+                  gender === option && styles.genderButtonTextSelected,
+                ]}
+              >
+                {option}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
-
-      <Text style={styles.label}>What's your Age?</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your age"
-        keyboardType="numeric"
-        value={age}
-        onChangeText={setAge}
-        placeholderTextColor="#aaa"
-      />
-
-      <TouchableOpacity style={styles.button} onPress={handleNext}>
-        <Text style={styles.buttonText}>NEXT</Text>
+      <View style={styles.section}>
+        <Text style={styles.label}>What’s your age?</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your age"
+          placeholderTextColor="#666"
+          keyboardType="numeric"
+          value={age}
+          onChangeText={(text) => {
+            if (/^\d*$/.test(text)) {
+              setAge(text);
+            }
+          }}
+        />
+      </View>
+      <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+        <Text style={styles.nextButtonText}>NEXT</Text>
       </TouchableOpacity>
     </View>
   );
@@ -81,52 +74,72 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
+    paddingHorizontal: 24,
     justifyContent: "center",
-    padding: 20,
   },
-  heading: {
-    fontSize: 32,
+  title: {
     color: "#fff",
     textAlign: "center",
-    fontWeight: "bold",
-    marginBottom: 20,
+    fontSize: 20,
+    fontWeight: "600",
+    marginBottom: 24,
+  },
+  section: {
+    marginBottom: 24,
   },
   label: {
+    color: "#fff",
     fontSize: 18,
-    color: "#fff",
-    marginBottom: 10,
+    marginBottom: 12,
   },
-  radioGroup: {
+  genderOptions: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 20,
+    justifyContent: "space-between",
   },
-  radioText: {
-    color: "#fff",
+  genderButton: {
+    flex: 1,
+    height: 48,
+    marginHorizontal: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#666",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#1a1a1a",
+  },
+  genderButtonSelected: {
+    backgroundColor: "#666",
+    borderColor: "#fff",
+  },
+  genderButtonText: {
     fontSize: 16,
+    color: "#666",
   },
-  selectedRadio: {
-    fontWeight: "bold",
+  genderButtonTextSelected: {
+    color: "#fff",
+    fontWeight: "700",
   },
   input: {
     height: 50,
-    borderColor: "#ccc",
     borderWidth: 1,
-    borderRadius: 10,
-    marginBottom: 20,
-    paddingHorizontal: 15,
+    borderColor: "#666",
+    borderRadius: 8,
+    paddingHorizontal: 16,
     color: "#fff",
+    backgroundColor: "#1a1a1a",
   },
-  button: {
-    backgroundColor: "#333",
-    paddingVertical: 15,
-    borderRadius: 10,
+  nextButton: {
+    height: 48,
+    backgroundColor: "#6e6969",
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 16,
   },
-  buttonText: {
+  nextButtonText: {
     color: "#fff",
-    textAlign: "center",
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "600",
   },
 });
 

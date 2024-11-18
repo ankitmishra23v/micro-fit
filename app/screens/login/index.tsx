@@ -6,18 +6,17 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import { useRouter } from "expo-router"; // Use the router for navigation
+import { useRouter } from "expo-router";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const router = useRouter(); // Access the router object for navigation
+  const router = useRouter();
 
   const handleLogin = () => {
-    // Simple validation for demo purposes
     if (email === "user@example.com" && password === "password123") {
-      router.push("/screens/onboarding"); // Navigate to onboarding screen
+      router.push("/screens/onboarding");
     } else {
       setErrorMessage("Invalid credentials. Please try again.");
     }
@@ -25,48 +24,48 @@ const LoginScreen = () => {
 
   const handleChangeEmail = (text: string) => {
     setEmail(text);
-    setErrorMessage(""); // Clear error message when user starts typing
+    setErrorMessage("");
   };
 
   const handleChangePassword = (text: string) => {
     setPassword(text);
-    setErrorMessage(""); // Clear error message when user starts typing
+    setErrorMessage("");
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Login</Text>
       <Text style={styles.subHeading}>Welcome back to Micro.Fit</Text>
-
-      <View className="mb-[4%]">
-        <Text className="tracking-wide mb-2 text-md text-white">EMAIL</Text>
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>EMAIL</Text>
         <TextInput
           style={styles.input}
           placeholder="Email"
           value={email}
-          onChangeText={handleChangeEmail} // Use the updated handler
+          onChangeText={handleChangeEmail}
           placeholderTextColor="#aaa"
         />
       </View>
-      <Text className="tracking-wide mb-2 text-md text-white">PASSWORD</Text>
+      <Text style={styles.label}>PASSWORD</Text>
       <TextInput
         style={styles.input}
         placeholder="Password"
         value={password}
-        onChangeText={handleChangePassword} // Use the updated handler
+        onChangeText={handleChangePassword}
         secureTextEntry
         placeholderTextColor="#aaa"
       />
-
       {errorMessage ? (
         <Text style={styles.errorText}>{errorMessage}</Text>
       ) : null}
-
-      <TouchableOpacity
-        className="mt-[20%] bg-[#333] rounded-lg p-4"
-        onPress={handleLogin}
-      >
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>LOGIN</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => router.push("/screens/signup")}
+      >
+        <Text style={styles.buttonText}>SIGNUP</Text>
       </TouchableOpacity>
     </View>
   );
@@ -75,16 +74,10 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000", // Dark background color
+    backgroundColor: "#000",
     justifyContent: "center",
     padding: 20,
     paddingTop: 50,
-  },
-  logo: {
-    width: 150,
-    height: 150,
-    alignSelf: "center",
-    marginBottom: 40,
   },
   heading: {
     fontSize: 32,
@@ -99,6 +92,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 30,
   },
+  inputContainer: {
+    marginBottom: "4%",
+  },
+  label: {
+    color: "#fff",
+    fontSize: 16,
+    marginBottom: 8,
+  },
   input: {
     height: 50,
     borderColor: "#ccc",
@@ -106,7 +107,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 15,
     paddingHorizontal: 15,
-    color: "#fff", // White text for inputs
+    color: "#fff",
   },
   errorText: {
     color: "red",
@@ -114,10 +115,10 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   button: {
-    backgroundColor: "#333", // Dark button color
+    backgroundColor: "#333",
     paddingVertical: 15,
     borderRadius: 10,
-    marginTop: 10,
+    marginTop: 20,
   },
   buttonText: {
     color: "#fff",

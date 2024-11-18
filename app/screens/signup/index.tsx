@@ -5,22 +5,19 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Image,
 } from "react-native";
-import { useRouter } from "expo-router"; // Use the router for navigation
+import { useRouter } from "expo-router";
 
 const SignupScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const router = useRouter(); // Access the router object for navigation
+  const router = useRouter();
 
   const handleSignup = () => {
-    // Simple validation for demo purposes
     if (email && password && firstName) {
-      // On successful signup, navigate to GenderScreen
-      router.push("/screens/signup/genderscreen"); // Correct path
+      router.push("/screens/signup/genderscreen");
     } else {
       setErrorMessage("Please fill in all fields.");
     }
@@ -30,7 +27,6 @@ const SignupScreen = () => {
     <View style={styles.container}>
       <Text style={styles.heading}>Sign Up</Text>
       <Text style={styles.subHeading}>Create a new account on Micro.Fit</Text>
-
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -53,11 +49,9 @@ const SignupScreen = () => {
         onChangeText={setFirstName}
         placeholderTextColor="#aaa"
       />
-
       {errorMessage ? (
         <Text style={styles.errorText}>{errorMessage}</Text>
       ) : null}
-
       <TouchableOpacity style={styles.button} onPress={handleSignup}>
         <Text style={styles.buttonText}>CREATE ACCOUNT</Text>
       </TouchableOpacity>
@@ -68,16 +62,10 @@ const SignupScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000", // Dark background color
+    backgroundColor: "#000",
     justifyContent: "center",
     padding: 20,
     paddingTop: 50,
-  },
-  logo: {
-    width: 150,
-    height: 150,
-    alignSelf: "center",
-    marginBottom: 40,
   },
   heading: {
     fontSize: 32,
@@ -99,7 +87,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 15,
     paddingHorizontal: 15,
-    color: "#fff", // White text for inputs
+    color: "#fff",
   },
   errorText: {
     color: "red",
@@ -107,10 +95,10 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   button: {
-    backgroundColor: "#333", // Dark button color
+    backgroundColor: "#333",
     paddingVertical: 15,
     borderRadius: 10,
-    marginTop: 10,
+    marginTop: 20,
   },
   buttonText: {
     color: "#fff",
