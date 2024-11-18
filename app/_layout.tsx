@@ -1,39 +1,39 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+// /app/_layout.js
+import React, { useState, useEffect } from "react";
+import { Redirect } from "expo-router";
+import useAuth from "./auth/useAuth"; // Custom hook to check login status
+import { Slot } from "expo-router"; // Import Slot
+import "../global.css";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+export default function Layout() {
+  const { isLoggedIn } = useAuth(); // Check if user is logged in
+  const [isLoading, setIsLoading] = useState(true); // Loading state for auth status
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+    // Simulate fetching authentication status
+    const checkAuthStatus = async () => {
+      setIsLoading(false); // After checking, set loading to false
+    };
 
-  if (!loaded) {
-    return null;
+    checkAuthStatus();
+  }, []);
+
+  // While loading, render nothing or a loading spinner
+  if (isLoading) {
+    return null; // Or show a loading spinner if desired
   }
 
+  // Redirect based on authentication status
+  if (isLoggedIn) {
+    return <Redirect href="screens/onboarding" />;
+  }
+
+  // If not logged in, redirect to the welcome screen
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <>
+      <Redirect href="screens/welcome" />
+      {/* Render the Slot for nested routes */}
+      <Slot />
+    </>
   );
 }
