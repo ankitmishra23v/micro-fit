@@ -1,12 +1,7 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
+import Header from "@/components/Header";
 
 const GenderAgeScreen = () => {
   const [gender, setGender] = useState("");
@@ -22,25 +17,36 @@ const GenderAgeScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tell us more about you</Text>
-      <View style={styles.section}>
-        <Text style={styles.label}>What’s your gender?</Text>
-        <View style={styles.genderOptions}>
+    <View className="flex-1 bg-black px-6 pt-8">
+      <View>
+        <Header />
+      </View>
+
+      {/* Title */}
+      <Text className="text-[#CDCDCD] text-sm tracking-wider font-bold  mt-[30%] mb-[4%] uppercase">
+        Tell us more about you
+      </Text>
+
+      {/* Gender Section */}
+      <View className="mb-6">
+        <Text className="text-white text-2xl font-bold mb-4">
+          What’s your gender?
+        </Text>
+        <View className="flex-row justify-between mb-[10%]">
           {["Male", "Female", "Other"].map((option) => (
             <TouchableOpacity
               key={option}
-              style={[
-                styles.genderButton,
-                gender === option && styles.genderButtonSelected,
-              ]}
+              className={`flex-1 h-12 mx-1 rounded-lg border ${
+                gender === option
+                  ? "bg-[#333333] border-white"
+                  : "bg-gray-900 border-gray-600"
+              } justify-center items-center`}
               onPress={() => setGender(option)}
             >
               <Text
-                style={[
-                  styles.genderButtonText,
-                  gender === option && styles.genderButtonTextSelected,
-                ]}
+                className={`text-base ${
+                  gender === option ? "text-white font-bold" : "text-gray-400"
+                }`}
               >
                 {option}
               </Text>
@@ -48,10 +54,12 @@ const GenderAgeScreen = () => {
           ))}
         </View>
       </View>
-      <View style={styles.section}>
-        <Text style={styles.label}>What’s your age?</Text>
+
+      {/* Age Section */}
+      <View className="mb-6">
+        <Text className="text-white text-lg mb-4">What’s your age?</Text>
         <TextInput
-          style={styles.input}
+          className="h-12 border border-gray-600 rounded-lg px-4 text-white "
           placeholder="Enter your age"
           placeholderTextColor="#666"
           keyboardType="numeric"
@@ -63,84 +71,16 @@ const GenderAgeScreen = () => {
           }}
         />
       </View>
-      <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-        <Text style={styles.nextButtonText}>NEXT</Text>
+
+      {/* Next Button */}
+      <TouchableOpacity
+        className="h-12 bg-[#333333] rounded-lg justify-center items-center mt-4"
+        onPress={handleNext}
+      >
+        <Text className="text-white text-lg font-bold">NEXT</Text>
       </TouchableOpacity>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-    paddingHorizontal: 24,
-    justifyContent: "center",
-  },
-  title: {
-    color: "#fff",
-    textAlign: "center",
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 24,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  label: {
-    color: "#fff",
-    fontSize: 18,
-    marginBottom: 12,
-  },
-  genderOptions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  genderButton: {
-    flex: 1,
-    height: 48,
-    marginHorizontal: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#666",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#1a1a1a",
-  },
-  genderButtonSelected: {
-    backgroundColor: "#666",
-    borderColor: "#fff",
-  },
-  genderButtonText: {
-    fontSize: 16,
-    color: "#666",
-  },
-  genderButtonTextSelected: {
-    color: "#fff",
-    fontWeight: "700",
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#666",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    color: "#fff",
-    backgroundColor: "#1a1a1a",
-  },
-  nextButton: {
-    height: 48,
-    backgroundColor: "#6e6969",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 16,
-  },
-  nextButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-});
 
 export default GenderAgeScreen;

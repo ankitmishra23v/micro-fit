@@ -20,17 +20,14 @@ const GenderAgeScreen = () => {
 
   return (
     <View className="flex-1 bg-black px-6 pt-8">
-      <View className="text-center">
-        <Header />
-      </View>
-      {/* Reminder Section */}
+      <Header />
+
       <View className="  mt-[40%] mb-[4%]">
         <Text className="text-white text-center font-bold text-2xl mb-4">
-          Turn On Reminders
+          Apple Health
         </Text>
         <Text className="text-gray-400 text-lg mb-4 text-center">
-          We can send you notifications to remind you when you have to start
-          your routine.
+          Import your activity data to Micro.Fit
         </Text>
         <View className="flex-row  gap-4 justify-center items-center my-[8%]">
           <Switch
@@ -39,7 +36,7 @@ const GenderAgeScreen = () => {
             thumbColor={remindersEnabled ? "#f5dd4b" : "#f4f3f4"}
             trackColor={{ false: "#767577", true: "#81b0ff" }}
           />
-          <Text className="text-white">Notifications</Text>
+          <Text className="text-white">Apple Health Sync</Text>
         </View>
       </View>
 

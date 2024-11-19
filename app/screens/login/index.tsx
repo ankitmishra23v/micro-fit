@@ -1,12 +1,7 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
+import Header from "@/components/Header";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -33,99 +28,50 @@ const LoginScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Login</Text>
-      <Text style={styles.subHeading}>Welcome back to Micro.Fit</Text>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>EMAIL</Text>
+    <View className="flex-1 bg-black justify-center px-6">
+      <Header />
+      <Text className="text-white text-4xl font-bold text-center mb-4">
+        Login
+      </Text>
+      <Text className="text-white text-lg text-center mb-8">
+        Welcome back to Micro.Fit
+      </Text>
+      <View className="mb-6">
+        <Text className="text-white text-l mb-2">EMAIL</Text>
         <TextInput
-          style={styles.input}
+          className="h-12 border border-gray-600 rounded-lg mb-2 px-4 text-white "
           placeholder="Email"
+          placeholderTextColor="#aaa"
           value={email}
           onChangeText={handleChangeEmail}
-          placeholderTextColor="#aaa"
         />
       </View>
-      <Text style={styles.label}>PASSWORD</Text>
+      <Text className="text-white text-l mb-2">PASSWORD</Text>
       <TextInput
-        style={styles.input}
+        className="h-12 border border-gray-600 rounded-lg mb-4 px-4 text-white "
         placeholder="Password"
+        placeholderTextColor="#aaa"
+        secureTextEntry
         value={password}
         onChangeText={handleChangePassword}
-        secureTextEntry
-        placeholderTextColor="#aaa"
       />
-      {errorMessage ? (
-        <Text style={styles.errorText}>{errorMessage}</Text>
-      ) : null}
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>LOGIN</Text>
+      {errorMessage && (
+        <Text className="text-red-500 text-center mb-4">{errorMessage}</Text>
+      )}
+      <TouchableOpacity
+        className="bg-[#333333] py-2 rounded-lg mb-4 mt-[8%]"
+        onPress={handleLogin}
+      >
+        <Text className="text-white text-lg font-bold text-center">LOGIN</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={styles.button}
+        className="bg-[#333333] py-2 rounded-lg"
         onPress={() => router.push("/screens/signup")}
       >
-        <Text style={styles.buttonText}>SIGNUP</Text>
+        <Text className="text-white text-lg font-bold text-center">SIGNUP</Text>
       </TouchableOpacity>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-    justifyContent: "center",
-    padding: 20,
-    paddingTop: 50,
-  },
-  heading: {
-    fontSize: 32,
-    color: "#fff",
-    textAlign: "center",
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  subHeading: {
-    fontSize: 16,
-    color: "#fff",
-    textAlign: "center",
-    marginBottom: 30,
-  },
-  inputContainer: {
-    marginBottom: "4%",
-  },
-  label: {
-    color: "#fff",
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  input: {
-    height: 50,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 10,
-    marginBottom: 15,
-    paddingHorizontal: 15,
-    color: "#fff",
-  },
-  errorText: {
-    color: "red",
-    textAlign: "center",
-    marginBottom: 15,
-  },
-  button: {
-    backgroundColor: "#333",
-    paddingVertical: 15,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  buttonText: {
-    color: "#fff",
-    textAlign: "center",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-});
 
 export default LoginScreen;

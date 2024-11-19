@@ -1,111 +1,109 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
+import Header from "@/components/Header";
 
 const SignupScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
 
+  const isValidEmail = (email: any) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const validateInputs = () => {
+    if (!email || !password || !confirmPassword || !firstName) {
+      return "Please fill in all fields.";
+    }
+    if (!isValidEmail(email)) {
+      return "Please enter a valid email address.";
+    }
+    if (password !== confirmPassword) {
+      return "Passwords do not match.";
+    }
+    return "";
+  };
+
   const handleSignup = () => {
-    if (email && password && firstName) {
-      router.push("/screens/signup/genderscreen");
+    const error = validateInputs();
+    if (error) {
+      setErrorMessage(error);
     } else {
-      setErrorMessage("Please fill in all fields.");
+      setErrorMessage("");
+      router.push("/screens/signup/genderscreen");
     }
   };
 
+  const handleChange = (setter: any) => (text: any) => {
+    setter(text);
+    setErrorMessage("");
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Sign Up</Text>
-      <Text style={styles.subHeading}>Create a new account on Micro.Fit</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        placeholderTextColor="#aaa"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        placeholderTextColor="#aaa"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="First Name"
-        value={firstName}
-        onChangeText={setFirstName}
-        placeholderTextColor="#aaa"
-      />
-      {errorMessage ? (
-        <Text style={styles.errorText}>{errorMessage}</Text>
-      ) : null}
-      <TouchableOpacity style={styles.button} onPress={handleSignup}>
-        <Text style={styles.buttonText}>CREATE ACCOUNT</Text>
+    <View className="flex-1 bg-black px-6 pt-8">
+      <Header />
+      <Text className="text-white text-4xl font-bold text-center mt-[30%] mb-4">
+        Sign Up
+      </Text>
+      <Text className="text-white text-lg text-center mb-8">
+        Create a new account on Micro.Fit
+      </Text>
+      <View>
+        <TextInput
+          className="h-12 border border-gray-600 rounded-lg mb-4 px-4 text-white"
+          placeholder="Email"
+          placeholderTextColor="#aaa"
+          value={email}
+          onChangeText={handleChange(setEmail)}
+        />
+        <View className="relative">
+          <TextInput
+            className="h-12 border border-gray-600 rounded-lg mb-4 px-4 text-white"
+            placeholder="Password"
+            placeholderTextColor="#aaa"
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={handleChange(setPassword)}
+          />
+          <TouchableOpacity
+            className="absolute right-4 top-4"
+            onPress={() => setShowPassword(!showPassword)}
+          >
+            <Text className="text-white">{showPassword ? "Hide" : "Show"}</Text>
+          </TouchableOpacity>
+        </View>
+        <TextInput
+          className="h-12 border border-gray-600 rounded-lg mb-4 px-4 text-white"
+          placeholder="Confirm Password"
+          placeholderTextColor="#aaa"
+          secureTextEntry={!showPassword}
+          value={confirmPassword}
+          onChangeText={handleChange(setConfirmPassword)}
+        />
+        <TextInput
+          className="h-12 border border-gray-600 rounded-lg mb-4 px-4 text-white"
+          placeholder="First Name"
+          placeholderTextColor="#aaa"
+          value={firstName}
+          onChangeText={handleChange(setFirstName)}
+        />
+        {errorMessage && (
+          <Text className="text-red-500 text-center mb-4">{errorMessage}</Text>
+        )}
+      </View>
+      <TouchableOpacity
+        className="bg-[#333333] py-3 rounded-lg mt-4"
+        onPress={handleSignup}
+      >
+        <Text className="text-white text-lg font-bold text-center">
+          CREATE ACCOUNT
+        </Text>
       </TouchableOpacity>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-    justifyContent: "center",
-    padding: 20,
-    paddingTop: 50,
-  },
-  heading: {
-    fontSize: 32,
-    color: "#fff",
-    textAlign: "center",
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  subHeading: {
-    fontSize: 16,
-    color: "#fff",
-    textAlign: "center",
-    marginBottom: 30,
-  },
-  input: {
-    height: 50,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 10,
-    marginBottom: 15,
-    paddingHorizontal: 15,
-    color: "#fff",
-  },
-  errorText: {
-    color: "red",
-    textAlign: "center",
-    marginBottom: 15,
-  },
-  button: {
-    backgroundColor: "#333",
-    paddingVertical: 15,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  buttonText: {
-    color: "#fff",
-    textAlign: "center",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-});
 
 export default SignupScreen;
