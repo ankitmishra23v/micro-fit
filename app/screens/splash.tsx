@@ -1,23 +1,36 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import { useAuth } from "../../auth/useAuth";
 
 export default function SplashScreen() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.replace("/screens/welcome");
-    }, 1000);
+    const checkAuth = async () => {
+      const authenticated = isAuthenticated();
+      setLoading(false); // Stop showing splash screen
+      if (authenticated) {
+        router.replace("/screens/onboarding");
+      } else {
+        router.replace("/screens/welcome");
+      }
+    };
 
-    return () => clearTimeout(timer);
-  }, [router]);
+    checkAuth();
+  }, [isAuthenticated, router]);
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>MICRO. FIT</Text>
-    </View>
-  );
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>MICRO. FIT</Text>
+      </View>
+    );
+  }
+
+  return null; // Render nothing while redirecting
 }
 
 const styles = StyleSheet.create({
@@ -25,12 +38,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#000000", // Black background
+    backgroundColor: "#000000",
   },
   title: {
-    color: "#FFFFFF", // White text
-    fontSize: 40, // Large text size
-    fontWeight: "bold", // Bold text
+    color: "#FFFFFF",
+    fontSize: 40,
+    fontWeight: "bold",
     letterSpacing: 5,
   },
 });

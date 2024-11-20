@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import Header from "@/components/Header";
+import { useAuth } from "@/auth/useAuth"; // Import AuthContext for signup functionality
 
 const SignupScreen = () => {
   const [email, setEmail] = useState("");
@@ -11,8 +12,10 @@ const SignupScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
+  const { signUp } = useAuth(); // Access signUp from AuthContext
 
-  const isValidEmail = (email: any) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const validateInputs = () => {
     if (!email || !password || !confirmPassword || !firstName) {
@@ -27,20 +30,37 @@ const SignupScreen = () => {
     return "";
   };
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     const error = validateInputs();
     if (error) {
       setErrorMessage(error);
-    } else {
-      setErrorMessage("");
+      return;
+    }
+
+    const payload = {
+      email,
+      firstName,
+      password,
+      loginType: "system", // Static loginType as per your requirements
+    };
+
+    try {
+      const response = await signUp(payload);
+      console.log(response);
+      Alert.alert("Success", "Account created successfully!");
+
       router.push("/screens/signup/genderscreen");
+    } catch (err: any) {
+      setErrorMessage(err.message || "Signup failed. Please try again.");
     }
   };
 
-  const handleChange = (setter: any) => (text: any) => {
-    setter(text);
-    setErrorMessage("");
-  };
+  const handleChange =
+    (setter: React.Dispatch<React.SetStateAction<string>>) =>
+    (text: string) => {
+      setter(text);
+      setErrorMessage("");
+    };
 
   return (
     <View className="flex-1 bg-black px-6 pt-8">

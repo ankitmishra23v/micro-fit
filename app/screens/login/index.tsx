@@ -1,19 +1,22 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import Header from "@/components/Header";
+import { useAuth } from "@/auth/useAuth"; // Import AuthContext
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
+  const { login } = useAuth(); // Get login function from AuthContext
 
-  const handleLogin = () => {
-    if (email === "user@example.com" && password === "password123") {
-      router.push("/screens/onboarding");
-    } else {
-      setErrorMessage("Invalid credentials. Please try again.");
+  const handleLogin = async () => {
+    try {
+      await login({ email, password });
+      router.push("/screens/onboarding"); // Navigate to onboarding on successful login
+    } catch (err: any) {
+      setErrorMessage(err.message || "Invalid credentials. Please try again.");
     }
   };
 
