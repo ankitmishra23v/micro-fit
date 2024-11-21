@@ -22,7 +22,7 @@ export default function WelcomeScreen() {
           ALREADY HAVE AN ACCOUNT?
         </Text>
         <TouchableOpacity
-          className="bg-[#333333] py-2 rounded-lg"
+          className="bg-primary py-2 rounded-lg"
           onPress={() => router.push("/screens/login")}
         >
           <Text className="text-white text-lg font-bold text-center">
@@ -40,7 +40,7 @@ export default function WelcomeScreen() {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className="bg-[#333333]  py-2 rounded-lg"
+          className="bg-primary  py-2 rounded-lg"
           onPress={() => router.push("/screens/signup")}
         >
           <Text className="text-white  text-lg font-bold text-center">

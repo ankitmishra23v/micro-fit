@@ -1,13 +1,30 @@
-import React from "react";
-import { View, Text, Button, StyleSheet, Image } from "react-native";
-import { useRouter } from "expo-router"; // Use the router for navigation
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Button,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useAuth } from "@/auth/useAuth";
 
 const OnboardingScreen = () => {
-  const router = useRouter(); // Access the router object for navigation
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const { logout } = useAuth();
 
-  const handleNext = () => {
-    // Navigate to the next screen (could be a dashboard or home screen)
-    router.push("/screens/welcome");
+  const handleLogout = async () => {
+    setLoading(true); // Show loader
+    try {
+      await logout();
+      router.replace("/screens/welcome");
+    } catch (error) {
+      console.error("Error during logout:", error);
+    } finally {
+      setLoading(false); // Hide loader
+    }
   };
 
   return (
@@ -21,7 +38,16 @@ const OnboardingScreen = () => {
         </Text>
       </View>
 
-      <Button title="Start Now" onPress={handleNext} color="#fff" />
+      {loading ? (
+        <ActivityIndicator size="large" color="#FFFFFF" style={styles.loader} />
+      ) : (
+        <TouchableOpacity
+          onPress={handleLogout}
+          className="bg-primary py-4 rounded-lg "
+        >
+          <Text className="text-white text-center ">LOG OUT</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -29,16 +55,10 @@ const OnboardingScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000", // Dark background color
+    backgroundColor: "#000",
     justifyContent: "center",
     padding: 20,
     paddingTop: 50,
-  },
-  logo: {
-    width: 150,
-    height: 150,
-    alignSelf: "center",
-    marginBottom: 40,
   },
   heading: {
     fontSize: 32,
@@ -61,6 +81,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     textAlign: "center",
     marginBottom: 30,
+  },
+  loader: {
+    marginTop: 20,
   },
 });
 

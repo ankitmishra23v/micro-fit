@@ -5,9 +5,11 @@ import React, {
   ReactNode,
   useEffect,
 } from "react";
+const jwtDecode = require("jwt-decode");
 import {
   logIn as doLogin,
   signUp as doSignUp,
+  refreshToken as refreshAuthToken,
 } from "../services/utilities/api";
 import Storage from "../services/utilities/storage";
 
@@ -36,6 +38,8 @@ interface SignUpData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+let tokenRefreshTimeout: NodeJS.Timeout | null = null;
+
 const useAuthProvider = () => {
   const [token, setToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
@@ -49,16 +53,14 @@ const useAuthProvider = () => {
         Storage.getRefreshToken(),
         Storage.getUserData<{ email: string; firstName: string }>(),
       ]);
-
       if (accessToken && refresh && userData) {
         setToken(accessToken);
         setRefreshToken(refresh);
         setEmail(userData.email);
         setFirstName(userData.firstName);
+        startTokenRefresh(refresh, accessToken);
       }
-    } catch (error) {
-      console.error("Failed to initialize authentication:", error);
-    }
+    } catch (error) {}
   };
 
   useEffect(() => {
@@ -71,7 +73,6 @@ const useAuthProvider = () => {
     try {
       const response: any = await doLogin({ data: user });
       const { accessToken, refreshToken, user: userData } = response.data;
-
       await Promise.all([
         Storage.setAuthToken(accessToken),
         Storage.setRefreshToken(refreshToken),
@@ -80,40 +81,65 @@ const useAuthProvider = () => {
           firstName: userData.firstName,
         }),
       ]);
-
       setToken(accessToken);
       setRefreshToken(refreshToken);
       setEmail(userData.email);
       setFirstName(userData.firstName);
+      startTokenRefresh(refreshToken, accessToken);
     } catch (error: any) {
-      throw new Error(
-        error.response?.data?.message || "Login failed. Please try again."
-      );
+      throw new Error(error.response?.data?.message || "Login failed.");
     }
   };
 
   const signUp = async (user: SignUpData): Promise<void> => {
     try {
       const response: any = await doSignUp({ data: user });
-      const message = response?.data?.message || "Signup successful.";
-      console.log(message);
     } catch (error: any) {
-      throw new Error(
-        error.response?.data?.message || "Sign up failed. Please try again."
-      );
+      throw new Error(error.response?.data?.message || "Sign up failed.");
     }
   };
 
-  const logout = async (): Promise<void> => {
+  const refreshAuthTokenHandler = async () => {
     try {
-      await Storage.clear();
-      setToken(null);
-      setRefreshToken(null);
-      setEmail(null);
-      setFirstName(null);
+      if (!refreshToken) throw new Error("Refresh token is missing");
+      const response: any = await refreshAuthToken({ data: { refreshToken } });
+      const { accessToken } = response.data;
+      await Storage.setAuthToken(accessToken);
+      setToken(accessToken);
+      startTokenRefresh(refreshToken, accessToken);
     } catch (error) {
-      console.error("Failed to log out:", error);
+      logout();
     }
+  };
+
+  const startTokenRefresh = (refresh: string, accessToken: string) => {
+    setRefreshToken(refresh);
+    if (tokenRefreshTimeout) {
+      clearTimeout(tokenRefreshTimeout);
+      tokenRefreshTimeout = null;
+    }
+    try {
+      const decodedToken: any = jwtDecode(accessToken);
+      const expiryTime = decodedToken.exp * 1000;
+      const refreshInterval = expiryTime - Date.now() - 1 * 60 * 1000;
+      if (refreshInterval > 0) {
+        tokenRefreshTimeout = setTimeout(() => {
+          refreshAuthTokenHandler();
+        }, refreshInterval);
+      }
+    } catch (error) {}
+  };
+
+  const logout = async (): Promise<void> => {
+    if (tokenRefreshTimeout) {
+      clearTimeout(tokenRefreshTimeout);
+      tokenRefreshTimeout = null;
+    }
+    await Storage.clear();
+    setToken(null);
+    setRefreshToken(null);
+    setEmail(null);
+    setFirstName(null);
   };
 
   return {

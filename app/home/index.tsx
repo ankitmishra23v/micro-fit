@@ -8,8 +8,6 @@ import {
   useColorScheme,
 } from "react-native";
 
-import { HelloWave } from "@/components/HelloWave";
-
 export default function HomeScreen() {
   const theme = useColorScheme() ?? "light";
   return (
@@ -28,7 +26,6 @@ export default function HomeScreen() {
       <View className="mt-4 mb-14">
         <Text className="text-yellow-400 text-lg">Explore fitness options</Text>
       </View>
-      <HelloWave />
     </View>
   );
 }

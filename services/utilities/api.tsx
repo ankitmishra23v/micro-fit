@@ -11,13 +11,26 @@ const makeApiUrl = (url: string) => `${getApiBaseUrl}${url}`;
 export const signUp = ({ data }: { data: Record<string, any> }) => {
   return http.post({
     url: makeApiUrl("users/register"),
-    data, // Wrap the data inside an object
+    data,
   });
 };
 
 export const logIn = ({ data }: { data: Record<string, any> }) => {
   return http.post({
     url: makeApiUrl("users/login"),
+    data,
+  });
+};
+
+export const logout = () => {
+  return http.post({
+    url: makeApiUrl("users/logout"),
+  });
+};
+
+export const refreshToken = ({ data }: { data: Record<string, any> }) => {
+  return http.post({
+    url: makeApiUrl("users/refresh-token"),
     data,
   });
 };
