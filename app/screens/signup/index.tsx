@@ -1,7 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { useRouter } from "expo-router";
 import Header from "@/components/Header";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { useAuth } from "@/auth/useAuth";
+import { toast } from "@/components/ToastManager";
 
 const SignupScreen = () => {
   const [email, setEmail] = useState("");
@@ -9,10 +18,17 @@ const SignupScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { signUp } = useAuth();
 
-  const isValidEmail = (email: any) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const isValidPassword = (password: string) => {
+    const regex = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.{8,16}$)/;
+    return regex.test(password);
+  };
 
   const validateInputs = () => {
     if (!email || !password || !confirmPassword || !firstName) {
@@ -21,37 +37,64 @@ const SignupScreen = () => {
     if (!isValidEmail(email)) {
       return "Please enter a valid email address.";
     }
+    if (!isValidPassword(password)) {
+      return "Password must be 8-16 characters long, include at least one uppercase letter, and one special character.";
+    }
     if (password !== confirmPassword) {
       return "Passwords do not match.";
     }
     return "";
   };
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
     const error = validateInputs();
     if (error) {
-      setErrorMessage(error);
-    } else {
-      setErrorMessage("");
+      toast.error({ title: error });
+      return;
+    }
+
+    setLoading(true);
+
+    const payload = {
+      email,
+      firstName,
+      password,
+      loginType: "system",
+    };
+
+    try {
+      await signUp(payload);
+      toast.success({ title: "Account created successfully!" });
       router.push("/screens/signup/genderscreen");
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message || "An unexpected error occurred!";
+      toast.error({ title: errorMessage });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleChange = (setter: any) => (text: any) => {
-    setter(text);
-    setErrorMessage("");
+  const handleChange =
+    (setter: React.Dispatch<React.SetStateAction<string>>) =>
+    (text: string) => {
+      setter(text);
+    };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
   };
 
   return (
-    <View className="flex-1 bg-black px-6 pt-8">
+    <View className="h-full bg-black px-6 pt-8">
       <Header />
-      <Text className="text-white text-4xl font-bold text-center mt-[30%] mb-4">
+      <Text className="text-white text-4xl font-bold text-center mt-[30%] md:mt-[5%] mb-4">
         Sign Up
       </Text>
       <Text className="text-white text-lg text-center mb-8">
         Create a new account on Micro.Fit
       </Text>
-      <View>
+      <View className="w-full md:w-[30%] mx-auto">
         <TextInput
           className="h-12 border border-gray-600 rounded-lg mb-4 px-4 text-white"
           placeholder="Email"
@@ -61,28 +104,34 @@ const SignupScreen = () => {
         />
         <View className="relative">
           <TextInput
-            className="h-12 border border-gray-600 rounded-lg mb-4 px-4 text-white"
+            className="h-12 border border-gray-600 rounded-lg mb-4 px-4 pr-12 text-white"
             placeholder="Password"
             placeholderTextColor="#aaa"
             secureTextEntry={!showPassword}
             value={password}
             onChangeText={handleChange(setPassword)}
           />
+        </View>
+        <View className="relative">
+          <TextInput
+            className="h-12 border border-gray-600 rounded-lg mb-4 px-4 pr-12 text-white"
+            placeholder="Confirm Password"
+            placeholderTextColor="#aaa"
+            secureTextEntry={!showPassword}
+            value={confirmPassword}
+            onChangeText={handleChange(setConfirmPassword)}
+          />
           <TouchableOpacity
-            className="absolute right-4 top-4"
-            onPress={() => setShowPassword(!showPassword)}
+            className="absolute right-4 bottom-2 h-full flex items-center justify-center"
+            onPress={togglePasswordVisibility}
           >
-            <Text className="text-white">{showPassword ? "Hide" : "Show"}</Text>
+            <FontAwesome6
+              name={showPassword ? "eye-slash" : "eye"}
+              size={16}
+              color="white"
+            />
           </TouchableOpacity>
         </View>
-        <TextInput
-          className="h-12 border border-gray-600 rounded-lg mb-4 px-4 text-white"
-          placeholder="Confirm Password"
-          placeholderTextColor="#aaa"
-          secureTextEntry={!showPassword}
-          value={confirmPassword}
-          onChangeText={handleChange(setConfirmPassword)}
-        />
         <TextInput
           className="h-12 border border-gray-600 rounded-lg mb-4 px-4 text-white"
           placeholder="First Name"
@@ -90,17 +139,21 @@ const SignupScreen = () => {
           value={firstName}
           onChangeText={handleChange(setFirstName)}
         />
-        {errorMessage && (
-          <Text className="text-red-500 text-center mb-4">{errorMessage}</Text>
-        )}
       </View>
       <TouchableOpacity
-        className="bg-[#333333] py-3 rounded-lg mt-4"
+        className={`bg-[#333333] py-3 rounded-lg mt-4 w-full md:w-[30%] mx-auto ${
+          loading ? "opacity-50" : ""
+        }`}
         onPress={handleSignup}
+        disabled={loading}
       >
-        <Text className="text-white text-lg font-bold text-center">
-          CREATE ACCOUNT
-        </Text>
+        {loading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text className="text-white text-lg font-bold text-center">
+            CREATE ACCOUNT
+          </Text>
+        )}
       </TouchableOpacity>
     </View>
   );

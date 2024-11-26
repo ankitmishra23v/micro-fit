@@ -1,14 +1,15 @@
 import React from "react";
-import { Stack } from "expo-router";
+import { Slot, Stack } from "expo-router";
 import "../global.css";
-
+import { AuthProvider } from "@/auth/useAuth";
+import { ToastProvider } from "@/components/ToastManager";
 const Layout = () => {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    />
+    <ToastProvider>
+      <AuthProvider>
+        <Slot />
+      </AuthProvider>
+    </ToastProvider>
   );
 };
 

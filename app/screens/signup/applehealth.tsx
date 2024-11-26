@@ -12,7 +12,7 @@ const GenderAgeScreen = () => {
 
   const handleNext = () => {
     if (remindersEnabled) {
-      router.push("/screens/signup/applehealth");
+      router.push("/screens/login");
     } else {
       alert("Please enable reminders to proceed.");
     }
