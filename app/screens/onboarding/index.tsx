@@ -1,90 +1,147 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
-  Button,
-  StyleSheet,
-  ActivityIndicator,
+  FlatList,
   TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  SafeAreaView,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/auth/useAuth";
+import betterSleepImage from "@/assets/images/MoonStars.png";
+import { getAllAgents } from "@/services/utilities/api";
+import { toast } from "@/components/ToastManager";
 
 const OnboardingScreen = () => {
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [options, setOptions] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(1);
+  const [hasMore, setHasMore] = useState<boolean>(true);
   const { logout } = useAuth();
+  const router = useRouter();
 
-  const handleLogout = async () => {
-    setLoading(true); // Show loader
-    try {
-      await logout();
-      router.replace("/screens/welcome");
-    } catch (error) {
-      console.error("Error during logout:", error);
-    } finally {
-      setLoading(false); // Hide loader
-    }
+  const fetchOptions = useCallback(
+    (currentPage: number) => {
+      const isInitialLoad = currentPage === 1;
+
+      if (isInitialLoad) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      getAllAgents({ params: { page: currentPage, limit: 10 } })
+        .then((response: any) => {
+          const { data, pagination } = response;
+
+          if (pagination.page >= pagination.pages) {
+            setHasMore(false);
+          }
+
+          setOptions((prevOptions) =>
+            isInitialLoad ? data : [...prevOptions, ...data]
+          );
+        })
+        .catch((error) => {
+          console.error("Error fetching agents:", error);
+          toast.error({ title: "Failed to fetch agents" });
+        })
+        .finally(() => {
+          if (isInitialLoad) {
+            setLoading(false);
+          } else {
+            setLoadingMore(false);
+          }
+        });
+    },
+    [setOptions]
+  );
+
+  useEffect(() => {
+    fetchOptions(1);
+  }, [fetchOptions]);
+
+  const handleLoadMore = () => {
+    if (!hasMore || loadingMore) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchOptions(nextPage);
   };
 
+  const handleAgentPress = (agentId: string) => {
+    router.push({
+      pathname: "/screens/onboarding/[agentInstance]",
+      params: { agentInstance: agentId },
+    });
+  };
+
+  const renderOption = useCallback(
+    ({ item }: { item: any }) => (
+      <TouchableOpacity
+        className="bg-primary rounded-xl flex justify-center px-2 m-2 overflow-hidden"
+        style={{ width: "45%", aspectRatio: 0.85 }}
+        onPress={() => handleAgentPress(item._id)}
+      >
+        <View className="h-[45%]">
+          <Text className="text-[1.5rem]  pl-2 font-bold text-white mt-2 uppercase">
+            {item.name}
+          </Text>
+        </View>
+        <View className="relative h-[20%] flex-1 justify-center items-center mb-4 mt-2">
+          <Image
+            source={betterSleepImage}
+            className="object-cover absolute right-0"
+          />
+        </View>
+      </TouchableOpacity>
+    ),
+    [handleAgentPress]
+  );
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Welcome to Micro.Fit</Text>
-      <Text style={styles.subHeading}>Your fitness journey starts here.</Text>
-
-      <View style={styles.content}>
-        <Text style={styles.text}>
-          Get personalized workout plans and track your progress with ease.
-        </Text>
-      </View>
-
-      {loading ? (
-        <ActivityIndicator size="large" color="#FFFFFF" style={styles.loader} />
-      ) : (
-        <TouchableOpacity
-          onPress={handleLogout}
-          className="bg-primary py-4 rounded-lg "
-        >
-          <Text className="text-white text-center ">LOG OUT</Text>
-        </TouchableOpacity>
-      )}
-    </View>
+    <SafeAreaView className="flex-1 bg-black ">
+      <TouchableOpacity
+        className="pt-[5%] px-5"
+        onPress={() => router.push("/home")}
+      >
+        <Ionicons name="chevron-back-sharp" size={24} color="white" />
+      </TouchableOpacity>
+      <FlatList
+        data={options}
+        keyExtractor={(item) => item._id.toString()}
+        numColumns={2}
+        renderItem={renderOption}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingTop: 8,
+          paddingBottom: 8,
+        }}
+        columnWrapperStyle={{
+          justifyContent: "space-between",
+        }}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListHeaderComponent={
+          <Text className="text-[4vh] text-white font-bold px-[4%] mt-[3em] mb-[8%]">
+            What do you want to improve?
+          </Text>
+        }
+        ListFooterComponent={
+          loadingMore ? (
+            <ActivityIndicator
+              size="small"
+              color="#FFFFFF"
+              style={{ margin: 16 }}
+            />
+          ) : null
+        }
+      />
+    </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-    justifyContent: "center",
-    padding: 20,
-    paddingTop: 50,
-  },
-  heading: {
-    fontSize: 32,
-    color: "#fff",
-    textAlign: "center",
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  subHeading: {
-    fontSize: 16,
-    color: "#fff",
-    textAlign: "center",
-    marginBottom: 30,
-  },
-  content: {
-    marginBottom: 40,
-  },
-  text: {
-    fontSize: 18,
-    color: "#fff",
-    textAlign: "center",
-    marginBottom: 30,
-  },
-  loader: {
-    marginTop: 20,
-  },
-});
 
 export default OnboardingScreen;

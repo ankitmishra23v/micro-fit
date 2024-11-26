@@ -1,6 +1,5 @@
 import http from "../core/http";
-
-const getApiBaseUrl = process.env.REACT_NATIVE_APP_API_BASE_URL;
+const getApiBaseUrl = process.env.EXPO_PUBLIC_REACT_NATIVE_APP_API_BASE_URL;
 
 if (!getApiBaseUrl) {
   throw new Error("API Base URL is not defined.");
@@ -32,5 +31,31 @@ export const refreshToken = ({ data }: { data: Record<string, any> }) => {
   return http.post({
     url: makeApiUrl("users/refresh-token"),
     data,
+  });
+};
+
+export const getAllAgents = ({ params }: { params?: any } = {}) => {
+  return http.get({
+    url: makeApiUrl("agents"),
+    params,
+  });
+};
+
+export const createAgentInstance = ({
+  data,
+  userId,
+}: {
+  data: Record<string, any>;
+  userId: string;
+}) => {
+  return http.post({
+    url: makeApiUrl(`user/agent/${userId}/instance`),
+    data,
+  });
+};
+
+export const getAgentInstances = (userId: string) => {
+  return http.get({
+    url: makeApiUrl(`user/${userId}/agent/instances`),
   });
 };

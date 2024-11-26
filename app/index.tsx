@@ -9,26 +9,28 @@ export default function Index() {
   const [layoutReady, setLayoutReady] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      if (!layoutReady) return;
-
+    const redirectUser = async () => {
       try {
         if (isAuthenticated()) {
-          router.replace("/screens/onboarding");
+          router.replace("/home"); // Redirect to home if authenticated
         } else {
-          router.replace("/screens/welcome");
+          router.replace("/screens/welcome"); // Redirect to welcome if not authenticated
         }
       } catch (error) {
-        console.error("Error during authentication check:", error);
-        router.replace("/screens/welcome");
+        console.error("Error determining authentication status:", error);
+        router.replace("/screens/welcome"); // Fallback in case of error
       }
     };
 
-    checkAuth();
-  }, [isAuthenticated, layoutReady]);
+    if (layoutReady) {
+      redirectUser();
+    }
+  }, [layoutReady, isAuthenticated]);
 
+  // Simulate layout readiness
   useEffect(() => {
-    setTimeout(() => setLayoutReady(true), 2500);
+    const timeout = setTimeout(() => setLayoutReady(true), 2500);
+    return () => clearTimeout(timeout); // Cleanup timeout on unmount
   }, []);
 
   return (

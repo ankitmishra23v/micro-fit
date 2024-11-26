@@ -5,15 +5,12 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
-  ToastAndroid,
-  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import Header from "@/components/Header";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAuth } from "@/auth/useAuth";
+import { toast } from "@/components/ToastManager";
 
 const SignupScreen = () => {
   const [email, setEmail] = useState("");
@@ -21,8 +18,7 @@ const SignupScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false); // Loading state
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { signUp } = useAuth();
 
@@ -49,22 +45,15 @@ const SignupScreen = () => {
     }
     return "";
   };
-  const showError = (message: string) => {
-    if (Platform.OS === "android" || Platform.OS === "ios") {
-      ToastAndroid.show(message, ToastAndroid.LONG); // Use Toast for Android
-    } else {
-      setErrorMessage(message); // For web, show as a normal error message
-    }
-  };
 
   const handleSignup = async () => {
     const error = validateInputs();
     if (error) {
-      showError(error); // Use `showError` for all platforms
+      toast.error({ title: error });
       return;
     }
 
-    setLoading(true); // Set loading state to true when API call starts
+    setLoading(true);
 
     const payload = {
       email,
@@ -74,19 +63,15 @@ const SignupScreen = () => {
     };
 
     try {
-      const response = await signUp(payload);
-
-      if (Platform.OS === "android" || Platform.OS === "ios") {
-        ToastAndroid.show("Account created successfully!", ToastAndroid.SHORT);
-      } else {
-        Alert.alert("Success", "Account created successfully!"); // Optional for web
-      }
-
+      await signUp(payload);
+      toast.success({ title: "Account created successfully!" });
       router.push("/screens/signup/genderscreen");
     } catch (err: any) {
-      showError(err.message || "Signup failed. Please try again."); // Use `showError` for consistent error handling
+      const errorMessage =
+        err.response?.data?.message || "An unexpected error occurred!";
+      toast.error({ title: errorMessage });
     } finally {
-      setLoading(false); // Reset loading state after API call finishes
+      setLoading(false);
     }
   };
 
@@ -94,13 +79,14 @@ const SignupScreen = () => {
     (setter: React.Dispatch<React.SetStateAction<string>>) =>
     (text: string) => {
       setter(text);
-      if (errorMessage) {
-        setErrorMessage("");
-      }
     };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+
   return (
-    <View className="flex-1 bg-black px-6 pt-8  ">
+    <View className="h-full bg-black px-6 pt-8">
       <Header />
       <Text className="text-white text-4xl font-bold text-center mt-[30%] md:mt-[5%] mb-4">
         Sign Up
@@ -125,26 +111,27 @@ const SignupScreen = () => {
             value={password}
             onChangeText={handleChange(setPassword)}
           />
+        </View>
+        <View className="relative">
+          <TextInput
+            className="h-12 border border-gray-600 rounded-lg mb-4 px-4 pr-12 text-white"
+            placeholder="Confirm Password"
+            placeholderTextColor="#aaa"
+            secureTextEntry={!showPassword}
+            value={confirmPassword}
+            onChangeText={handleChange(setConfirmPassword)}
+          />
           <TouchableOpacity
             className="absolute right-4 bottom-2 h-full flex items-center justify-center"
-            onPress={() => setShowPassword(!showPassword)}
+            onPress={togglePasswordVisibility}
           >
-            {!showPassword ? (
-              <FontAwesome6 name="eye" size={14} color="white" />
-            ) : (
-              <Ionicons name="eye-off-outline" size={16} color="white" />
-            )}
+            <FontAwesome6
+              name={showPassword ? "eye-slash" : "eye"}
+              size={16}
+              color="white"
+            />
           </TouchableOpacity>
         </View>
-
-        <TextInput
-          className="h-12 border border-gray-600 rounded-lg mb-4 px-4 text-white"
-          placeholder="Confirm Password"
-          placeholderTextColor="#aaa"
-          secureTextEntry={!showPassword}
-          value={confirmPassword}
-          onChangeText={handleChange(setConfirmPassword)}
-        />
         <TextInput
           className="h-12 border border-gray-600 rounded-lg mb-4 px-4 text-white"
           placeholder="First Name"
@@ -152,17 +139,13 @@ const SignupScreen = () => {
           value={firstName}
           onChangeText={handleChange(setFirstName)}
         />
-        {errorMessage && (
-          <Text className="text-red-700 text-center mb-4">{errorMessage}</Text>
-        )}
       </View>
-
       <TouchableOpacity
         className={`bg-[#333333] py-3 rounded-lg mt-4 w-full md:w-[30%] mx-auto ${
           loading ? "opacity-50" : ""
         }`}
         onPress={handleSignup}
-        disabled={loading} // Disable button when loading
+        disabled={loading}
       >
         {loading ? (
           <ActivityIndicator size="small" color="#fff" />

@@ -14,6 +14,7 @@ const UNKNOWN_ERR_MSG =
 axios.defaults.headers.post["Content-Type"] = CONTENT_TYPE_JSON;
 axios.defaults.timeout = TIMEOUT;
 
+// Interceptor to add the authorization token
 axios.interceptors.request.use(
   async (config: any) => {
     const token = await storage.getAuthToken();
@@ -33,21 +34,28 @@ class Http {
     method = "get",
     headers = {},
     url = "/",
-    data = {},
+    data,
     params = {},
     onUploadProgress,
     cancelToken,
   }: AxiosRequestConfig): Promise<T> {
     try {
-      const response: AxiosResponse<T> = await axios({
+      // Configure request without including unnecessary data fields
+      const axiosConfig: AxiosRequestConfig = {
         method,
         headers,
         url,
-        data,
         params,
         onUploadProgress,
         cancelToken,
-      });
+      };
+
+      // Add `data` only for methods that support request bodies and if `data` is valid
+      if (["post", "put", "patch"].includes(method.toLowerCase()) && data) {
+        axiosConfig.data = data;
+      }
+
+      const response: AxiosResponse<T> = await axios(axiosConfig);
       return response.data;
     } catch (error: unknown) {
       return this.handleError<T>(error);

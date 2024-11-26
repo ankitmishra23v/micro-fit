@@ -10,11 +10,16 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.microfit"
+      "bundleIdentifier": "com.anonymous.microfit",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/MICRO.FIT.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.anonymous.microfit"

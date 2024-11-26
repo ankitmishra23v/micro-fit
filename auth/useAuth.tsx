@@ -18,6 +18,7 @@ interface AuthContextType {
   refreshToken: string | null;
   email: string | null;
   firstName: string | null;
+  id: string | null; // Added id to the context
   isAuthenticated: () => boolean;
   login: (user: LoginData) => Promise<void>;
   signUp: (user: SignUpData) => Promise<void>;
@@ -45,22 +46,26 @@ const useAuthProvider = () => {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
+  const [id, setId] = useState<string | null>(null); // Added state for id
 
   const initializeAuth = async () => {
     try {
       const [accessToken, refresh, userData] = await Promise.all([
         Storage.getAuthToken(),
         Storage.getRefreshToken(),
-        Storage.getUserData<{ email: string; firstName: string }>(),
+        Storage.getUserData<{ email: string; firstName: string; id: string }>(),
       ]);
       if (accessToken && refresh && userData) {
         setToken(accessToken);
         setRefreshToken(refresh);
         setEmail(userData.email);
         setFirstName(userData.firstName);
+        setId(userData.id); // Set the user ID
         startTokenRefresh(refresh, accessToken);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error initializing auth:", error);
+    }
   };
 
   useEffect(() => {
@@ -79,12 +84,14 @@ const useAuthProvider = () => {
         Storage.setUserData({
           email: userData.email,
           firstName: userData.firstName,
+          id: userData._id, // Save the user ID
         }),
       ]);
       setToken(accessToken);
       setRefreshToken(refreshToken);
       setEmail(userData.email);
       setFirstName(userData.firstName);
+      setId(userData._id); // Set the user ID
       startTokenRefresh(refreshToken, accessToken);
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Login failed.");
@@ -93,7 +100,7 @@ const useAuthProvider = () => {
 
   const signUp = async (user: SignUpData): Promise<void> => {
     try {
-      const response: any = await doSignUp({ data: user });
+      await doSignUp({ data: user });
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Sign up failed.");
     }
@@ -108,7 +115,7 @@ const useAuthProvider = () => {
       setToken(accessToken);
       startTokenRefresh(refreshToken, accessToken);
     } catch (error) {
-      logout();
+      await logout();
     }
   };
 
@@ -131,15 +138,20 @@ const useAuthProvider = () => {
   };
 
   const logout = async (): Promise<void> => {
-    if (tokenRefreshTimeout) {
-      clearTimeout(tokenRefreshTimeout);
-      tokenRefreshTimeout = null;
+    try {
+      if (tokenRefreshTimeout) {
+        clearTimeout(tokenRefreshTimeout);
+        tokenRefreshTimeout = null;
+      }
+      await Storage.clear();
+      setToken(null);
+      setRefreshToken(null);
+      setEmail(null);
+      setFirstName(null);
+      setId(null); // Clear the user ID
+    } catch (error) {
+      throw new Error("Logout failed.");
     }
-    await Storage.clear();
-    setToken(null);
-    setRefreshToken(null);
-    setEmail(null);
-    setFirstName(null);
   };
 
   return {
@@ -147,6 +159,7 @@ const useAuthProvider = () => {
     refreshToken,
     email,
     firstName,
+    id, // Expose id in the context
     isAuthenticated,
     login,
     signUp,
