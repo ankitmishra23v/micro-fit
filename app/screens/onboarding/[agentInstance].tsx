@@ -88,7 +88,6 @@ const AgentDetailsScreen = () => {
             className="w-full h-12 border border-primary text-white px-4 rounded-md"
             placeholder="Sleeping Hours"
             placeholderTextColor="#888"
-            keyboardType="numeric"
             value={formData.sleeping_hours}
             onChangeText={(text) => handleInputChange("sleeping_hours", text)}
           />
@@ -119,7 +118,6 @@ const AgentDetailsScreen = () => {
             className="w-full h-12 border border-primary text-white px-4 rounded-md"
             placeholder="Sleep Time"
             placeholderTextColor="#888"
-            keyboardType="numeric"
             value={formData.sleep_time}
             onChangeText={(text) => handleInputChange("sleep_time", text)}
           />

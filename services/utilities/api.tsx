@@ -59,3 +59,15 @@ export const getAgentInstances = (userId: string) => {
     url: makeApiUrl(`user/${userId}/agent/instances`),
   });
 };
+
+export const getAgentInstanceById = (instanceId: string) => {
+  return http.get({
+    url: makeApiUrl(`user/agent/instance/${instanceId}`),
+  });
+};
+
+export const getDataByTask = (instanceId: string, task: string) => {
+  return http.get({
+    url: makeApiUrl(`instances/${instanceId}/task/${task}/data`),
+  });
+};

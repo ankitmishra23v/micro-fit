@@ -67,8 +67,7 @@ const SignupScreen = () => {
       toast.success({ title: "Account created successfully!" });
       router.push("/screens/signup/genderscreen");
     } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.message || "An unexpected error occurred!";
+      const errorMessage = err?.message || "An unexpected error occurred!";
       toast.error({ title: errorMessage });
     } finally {
       setLoading(false);

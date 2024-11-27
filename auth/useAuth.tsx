@@ -91,10 +91,10 @@ const useAuthProvider = () => {
       setRefreshToken(refreshToken);
       setEmail(userData.email);
       setFirstName(userData.firstName);
-      setId(userData._id); // Set the user ID
+      setId(userData._id);
       startTokenRefresh(refreshToken, accessToken);
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Login failed.");
+      throw new Error(error?.data?.message || "Login failed.");
     }
   };
 
@@ -102,7 +102,7 @@ const useAuthProvider = () => {
     try {
       await doSignUp({ data: user });
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Sign up failed.");
+      throw new Error(error?.data?.message || "Sign up failed.");
     }
   };
 

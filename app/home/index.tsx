@@ -8,6 +8,7 @@ import {
   FlatList,
   ActivityIndicator,
   Dimensions,
+  BackHandler,
 } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -26,6 +27,25 @@ const HomeScreen = () => {
   const { id, logout } = useAuth();
   const router = useRouter();
   const screenHeight = Dimensions.get("window").height;
+
+  useEffect(() => {
+    const backAction = () => {
+      if (drawerOpen) {
+        setDrawerOpen(false);
+        return true;
+      } else {
+        BackHandler.exitApp();
+        return true;
+      }
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [drawerOpen]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -55,7 +75,7 @@ const HomeScreen = () => {
       }
     };
     fetchAgentInstances();
-  }, [id]);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -67,7 +87,15 @@ const HomeScreen = () => {
   };
 
   const renderAgentCard = ({ item }: { item: any }) => (
-    <View className="bg-primary  flex flex-row px-4 py-3  gap-8 items-center rounded-lg mb-4">
+    <TouchableOpacity
+      onPress={() => {
+        router.push({
+          pathname: "/home/agentTasks/[agentTasks]",
+          params: { agentTasks: item._id },
+        });
+      }}
+      className="bg-primary  flex flex-row px-4 py-3  gap-8 items-center rounded-lg mb-4"
+    >
       <View className="bg-black h-[9vh] w-[11vh] flex items-center justify-center rounded-xl">
         <Image
           source={runImage}
@@ -86,7 +114,7 @@ const HomeScreen = () => {
           {item?.agentData?.description}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
