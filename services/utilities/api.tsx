@@ -15,6 +15,7 @@ export const signUp = ({ data }: { data: Record<string, any> }) => {
 };
 
 export const logIn = ({ data }: { data: Record<string, any> }) => {
+  console.log("URLLLLLLL:", makeApiUrl("users/login"));
   return http.post({
     url: makeApiUrl("users/login"),
     data,

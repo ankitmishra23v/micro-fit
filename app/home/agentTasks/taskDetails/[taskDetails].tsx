@@ -66,7 +66,7 @@ const TaskDetails = () => {
           <FontAwesome6 name="clock" size={20} color="white" />
         </TouchableOpacity>
       </View>
-      <View className="px-4 flex-1">
+      <View className="px-4 flex-1 ">
         <View className=" mb-6 py-4 flex">
           {taskData.length > 0 ? (
             <FlatList
@@ -85,6 +85,7 @@ const TaskDetails = () => {
             <Text className="text-white text-base">No data available</Text>
           )}
         </View>
+
         <TouchableOpacity className="bg-primary py-4 rounded-lg mt-4">
           <Text className="text-secondary text-center tracking-wider font-bold uppercase">
             Complete

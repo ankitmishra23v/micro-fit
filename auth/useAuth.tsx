@@ -5,11 +5,10 @@ import React, {
   ReactNode,
   useEffect,
 } from "react";
-const jwtDecode = require("jwt-decode");
 import {
   logIn as doLogin,
   signUp as doSignUp,
-  refreshToken as refreshAuthToken,
+  logout as doLogout,
 } from "../services/utilities/api";
 import Storage from "../services/utilities/storage";
 
@@ -18,7 +17,7 @@ interface AuthContextType {
   refreshToken: string | null;
   email: string | null;
   firstName: string | null;
-  id: string | null; // Added id to the context
+  id: string | null;
   isAuthenticated: () => boolean;
   login: (user: LoginData) => Promise<void>;
   signUp: (user: SignUpData) => Promise<void>;
@@ -39,14 +38,12 @@ interface SignUpData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-let tokenRefreshTimeout: NodeJS.Timeout | null = null;
-
 const useAuthProvider = () => {
   const [token, setToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
-  const [id, setId] = useState<string | null>(null); // Added state for id
+  const [id, setId] = useState<string | null>(null);
 
   const initializeAuth = async () => {
     try {
@@ -60,8 +57,7 @@ const useAuthProvider = () => {
         setRefreshToken(refresh);
         setEmail(userData.email);
         setFirstName(userData.firstName);
-        setId(userData.id); // Set the user ID
-        startTokenRefresh(refresh, accessToken);
+        setId(userData.id);
       }
     } catch (error) {
       console.error("Error initializing auth:", error);
@@ -84,15 +80,15 @@ const useAuthProvider = () => {
         Storage.setUserData({
           email: userData.email,
           firstName: userData.firstName,
-          id: userData._id, // Save the user ID
+          id: userData._id,
         }),
       ]);
+      console.log("req token,", accessToken);
       setToken(accessToken);
       setRefreshToken(refreshToken);
       setEmail(userData.email);
       setFirstName(userData.firstName);
       setId(userData._id);
-      startTokenRefresh(refreshToken, accessToken);
     } catch (error: any) {
       throw new Error(error?.data?.message || "Login failed.");
     }
@@ -106,49 +102,15 @@ const useAuthProvider = () => {
     }
   };
 
-  const refreshAuthTokenHandler = async () => {
-    try {
-      if (!refreshToken) throw new Error("Refresh token is missing");
-      const response: any = await refreshAuthToken({ data: { refreshToken } });
-      const { accessToken } = response.data;
-      await Storage.setAuthToken(accessToken);
-      setToken(accessToken);
-      startTokenRefresh(refreshToken, accessToken);
-    } catch (error) {
-      await logout();
-    }
-  };
-
-  const startTokenRefresh = (refresh: string, accessToken: string) => {
-    setRefreshToken(refresh);
-    if (tokenRefreshTimeout) {
-      clearTimeout(tokenRefreshTimeout);
-      tokenRefreshTimeout = null;
-    }
-    try {
-      const decodedToken: any = jwtDecode(accessToken);
-      const expiryTime = decodedToken.exp * 1000;
-      const refreshInterval = expiryTime - Date.now() - 1 * 60 * 1000;
-      if (refreshInterval > 0) {
-        tokenRefreshTimeout = setTimeout(() => {
-          refreshAuthTokenHandler();
-        }, refreshInterval);
-      }
-    } catch (error) {}
-  };
-
   const logout = async (): Promise<void> => {
     try {
-      if (tokenRefreshTimeout) {
-        clearTimeout(tokenRefreshTimeout);
-        tokenRefreshTimeout = null;
-      }
+      await doLogout();
       await Storage.clear();
       setToken(null);
       setRefreshToken(null);
       setEmail(null);
       setFirstName(null);
-      setId(null); // Clear the user ID
+      setId(null);
     } catch (error) {
       throw new Error("Logout failed.");
     }
@@ -159,7 +121,7 @@ const useAuthProvider = () => {
     refreshToken,
     email,
     firstName,
-    id, // Expose id in the context
+    id,
     isAuthenticated,
     login,
     signUp,

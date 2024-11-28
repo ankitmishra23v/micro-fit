@@ -63,6 +63,7 @@ const HomeScreen = () => {
   }, []);
 
   useEffect(() => {
+    if (!id) return;
     const fetchAgentInstances = async () => {
       try {
         setLoading(true);
@@ -75,7 +76,7 @@ const HomeScreen = () => {
       }
     };
     fetchAgentInstances();
-  }, []);
+  }, [id]);
 
   const handleLogout = async () => {
     try {

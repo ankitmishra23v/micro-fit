@@ -4,7 +4,7 @@ import axios, {
   AxiosError,
   CancelToken,
 } from "axios";
-import storage from "../utilities/storage";
+import Storage from "../utilities/storage";
 
 const TIMEOUT = 3600000;
 const CONTENT_TYPE_JSON = "application/json";
@@ -13,20 +13,50 @@ const UNKNOWN_ERR_MSG =
 
 axios.defaults.headers.post["Content-Type"] = CONTENT_TYPE_JSON;
 axios.defaults.timeout = TIMEOUT;
-
-// Interceptor to add the authorization token
 axios.interceptors.request.use(
   async (config: any) => {
-    const token = await storage.getAuthToken();
+    const token = await Storage.getAuthToken();
     if (token) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      };
+      config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
     }
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+axios.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest: any = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = await Storage.getRefreshToken();
+        console.log("Refresh Token:", refreshToken); // Debug log
+        if (!refreshToken) throw new Error("Refresh token missing");
+
+        // Refresh the token
+        const response = await axios.post("/auth/refresh", { refreshToken });
+        const { accessToken } = response.data;
+
+        // Save the new token
+        await Storage.setAuthToken(accessToken);
+
+        // Retry the original request with the new token
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return axios(originalRequest);
+      } catch (refreshError) {
+        console.error("Token refresh failed:", refreshError);
+        await Storage.clear();
+        window.location.href = "/login"; // Redirect to login on failure
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
 );
 
 class Http {
@@ -50,7 +80,6 @@ class Http {
         cancelToken,
       };
 
-      // Add `data` only for methods that support request bodies and if `data` is valid
       if (["post", "put", "patch"].includes(method.toLowerCase()) && data) {
         axiosConfig.data = data;
       }
