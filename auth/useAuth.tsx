@@ -83,7 +83,6 @@ const useAuthProvider = () => {
           id: userData._id,
         }),
       ]);
-      console.log("req token,", accessToken);
       setToken(accessToken);
       setRefreshToken(refreshToken);
       setEmail(userData.email);

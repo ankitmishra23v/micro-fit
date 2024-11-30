@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   FlatList,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
@@ -14,7 +15,6 @@ import { getDataByTask } from "@/services/utilities/api";
 
 const TaskDetails = () => {
   const { taskDetails, instanceId } = useLocalSearchParams();
-
   const router = useRouter();
   const taskName = taskDetails as string;
   const instance = instanceId as string;
@@ -29,8 +29,6 @@ const TaskDetails = () => {
         const response: any = await getDataByTask(instance, taskName);
         if (response?.data) {
           setTaskData(response.data);
-        } else {
-          console.error("Invalid response format:", response);
         }
       } catch (error) {
         console.error("Error fetching task data:", error);
@@ -54,7 +52,6 @@ const TaskDetails = () => {
 
   return (
     <SafeAreaView className="bg-black flex-1">
-      {/* Header */}
       <View className="flex-row justify-between items-center px-4 py-4">
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color="white" />
@@ -66,27 +63,31 @@ const TaskDetails = () => {
           <FontAwesome6 name="clock" size={20} color="white" />
         </TouchableOpacity>
       </View>
-      <View className="px-4 flex-1 ">
-        <View className=" mb-6 py-4 flex">
+      <View className="px-4 flex-1">
+        <View className="flex-1 mb-6 py-4">
           {taskData.length > 0 ? (
-            <FlatList
-              data={taskData}
-              keyExtractor={(item) => item._id}
-              renderItem={({ item }) => (
-                <View className=" bg-primary p-4 rounded-lg mb-4">
-                  <Text className="text-white text-base">
-                    {item.jsonData?.text || "No text available"}
-                  </Text>
-                </View>
-              )}
-              showsVerticalScrollIndicator={false}
-            />
+            <View>
+              <FlatList
+                data={taskData}
+                keyExtractor={(item) => item._id}
+                renderItem={({ item }) => (
+                  <View className="bg-primary p-4 rounded-lg mb-4">
+                    <Text className="text-white text-base">
+                      {item.jsonData?.text || "No text available"}
+                    </Text>
+                  </View>
+                )}
+                showsVerticalScrollIndicator={false}
+              />
+            </View>
           ) : (
             <Text className="text-white text-base">No data available</Text>
           )}
         </View>
-
-        <TouchableOpacity className="bg-primary py-4 rounded-lg mt-4">
+        <TouchableOpacity
+          className={`  bg-primary py-4 rounded-lg mb-16
+           ${taskData.length > 0 ? "block" : "hidden"}`}
+        >
           <Text className="text-secondary text-center tracking-wider font-bold uppercase">
             Complete
           </Text>
