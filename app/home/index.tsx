@@ -81,6 +81,7 @@ const HomeScreen = () => {
   const handleLogout = async () => {
     try {
       await logout();
+      console.log("logged out successfully");
       router.push("/screens/welcome");
     } catch (error) {
       console.error(error);

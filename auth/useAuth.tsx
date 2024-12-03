@@ -24,16 +24,17 @@ interface AuthContextType {
   logout: () => Promise<void>;
 }
 
-interface LoginData {
-  email: string;
-  password: string;
-}
+type LoginData = {
+  email?: string;
+  password?: string;
+};
 
 interface SignUpData {
-  firstName: string;
-  email: string;
-  password: string;
-  loginType: string;
+  firstName?: string;
+  email?: string;
+  password?: string;
+  loginType?: string;
+  code?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

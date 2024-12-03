@@ -10,11 +10,13 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.microfit",
+      "bundleIdentifier": "com.tevis.microskills",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
-        }
+        },
+
+        "LSApplicationQueriesSchemes": ["com.googleusercontent.apps"]
       }
     },
     "android": {
