@@ -6,6 +6,7 @@ const CONTENT_TYPE_JSON = "application/json";
 const UNKNOWN_ERR_MSG =
   "An unknown server error has occurred or the server may be unreachable.";
 const REFRESH_TOKEN_URL = `${process.env.EXPO_PUBLIC_REACT_NATIVE_APP_API_BASE_URL}/auth/refresh`;
+
 axios.defaults.headers.post["Content-Type"] = CONTENT_TYPE_JSON;
 axios.defaults.timeout = TIMEOUT;
 
@@ -39,7 +40,6 @@ axios.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        // Queue the request until token is refreshed
         return new Promise((resolve) => {
           addRefreshSubscriber((token) => {
             originalRequest.headers.Authorization = `Bearer ${token}`;
@@ -55,31 +55,25 @@ axios.interceptors.response.use(
         const refreshToken = await Storage.getRefreshToken();
         if (!refreshToken) throw new Error("Refresh token missing");
 
-        // Call API to refresh the token
         const response = await axios.post(REFRESH_TOKEN_URL, { refreshToken });
-        const { data } = response.data;
+        const { accessToken, refreshToken: newRefreshToken } = response.data;
 
-        if (!data || !data.accessToken || !data.refreshToken) {
+        if (!accessToken || !newRefreshToken) {
           throw new Error("Invalid token response");
         }
 
-        const { accessToken, refreshToken: newRefreshToken } = data;
-
-        // Save the new tokens
-        await Storage.setAuthToken(accessToken);
-        await Storage.setRefreshToken(newRefreshToken);
+        await Promise.all([
+          Storage.setAuthToken(accessToken),
+          Storage.setRefreshToken(newRefreshToken),
+        ]);
 
         isRefreshing = false;
-
-        // Notify all queued requests with the new token
         onTokenRefreshed(accessToken);
 
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return axios(originalRequest);
       } catch (refreshError) {
         isRefreshing = false;
-
-        // Clear storage and redirect to login on failure
         await Storage.clear();
         window.location.href = "screens/login";
         return Promise.reject(refreshError);
@@ -100,21 +94,20 @@ class Http {
     onUploadProgress,
     cancelToken,
   }: AxiosRequestConfig): Promise<T> {
+    const axiosConfig: AxiosRequestConfig = {
+      method,
+      headers,
+      url,
+      params,
+      onUploadProgress,
+      cancelToken,
+    };
+
+    if (["post", "put", "patch"].includes(method.toLowerCase()) && data) {
+      axiosConfig.data = data;
+    }
+
     try {
-      // Configure request without including unnecessary data fields
-      const axiosConfig: AxiosRequestConfig = {
-        method,
-        headers,
-        url,
-        params,
-        onUploadProgress,
-        cancelToken,
-      };
-
-      if (["post", "put", "patch"].includes(method.toLowerCase()) && data) {
-        axiosConfig.data = data;
-      }
-
       const response: AxiosResponse<T> = await axios(axiosConfig);
       return response.data;
     } catch (error: unknown) {

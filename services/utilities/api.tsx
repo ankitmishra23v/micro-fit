@@ -71,3 +71,14 @@ export const getDataByTask = (instanceId: string, task: string) => {
     url: makeApiUrl(`instances/${instanceId}/task/${task}/data`),
   });
 };
+
+export const submitDeviceDetails = ({
+  data,
+}: {
+  data: Record<string, any>;
+}) => {
+  return http.post({
+    url: makeApiUrl("user/device/register"),
+    data,
+  });
+};

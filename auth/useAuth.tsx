@@ -9,8 +9,11 @@ import {
   logIn as doLogin,
   signUp as doSignUp,
   logout as doLogout,
+  submitDeviceDetails,
 } from "../services/utilities/api";
+import messaging from "@react-native-firebase/messaging";
 import Storage from "../services/utilities/storage";
+import { Alert } from "react-native";
 
 interface AuthContextType {
   token: string | null;
@@ -22,6 +25,10 @@ interface AuthContextType {
   login: (user: LoginData) => Promise<void>;
   signUp: (user: SignUpData) => Promise<void>;
   logout: () => Promise<void>;
+  refreshTokens: (newTokens: {
+    accessToken: string;
+    refreshToken: string;
+  }) => Promise<void>;
 }
 
 type LoginData = {
@@ -53,6 +60,7 @@ const useAuthProvider = () => {
         Storage.getRefreshToken(),
         Storage.getUserData<{ email: string; firstName: string; id: string }>(),
       ]);
+
       if (accessToken && refresh && userData) {
         setToken(accessToken);
         setRefreshToken(refresh);
@@ -65,8 +73,64 @@ const useAuthProvider = () => {
     }
   };
 
+  const requestNotificationPermission = async () => {
+    try {
+      const authStatus = await messaging().requestPermission();
+      const isAuthorized =
+        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+      if (isAuthorized) {
+        console.log("Notification permissions granted");
+      } else {
+        console.warn("Notification permissions not granted");
+      }
+    } catch (error) {
+      console.error("Error requesting notification permissions:", error);
+    }
+  };
+
+  const registerDevice = async (accessToken: string) => {
+    try {
+      const deviceToken = await messaging().getToken();
+      Alert.alert("FCM Device Token:", deviceToken);
+
+      // Send the device token to the backend
+      const response: any = await submitDeviceDetails({
+        data: {
+          accessToken,
+          deviceToken,
+        },
+      });
+      console.log("Device registered:", response.data);
+    } catch (error) {
+      console.error("Error registering device:", error);
+    }
+  };
+
+  const handleTokenRefresh = () => {
+    messaging().onTokenRefresh(async (newToken) => {
+      console.log("FCM Token refreshed:", newToken);
+      if (token) {
+        try {
+          await submitDeviceDetails({
+            data: {
+              accessToken: token,
+              deviceToken: newToken,
+            },
+          });
+          console.log("Updated FCM token sent to the server");
+        } catch (error) {
+          console.error("Error updating FCM token:", error);
+        }
+      }
+    });
+  };
+
   useEffect(() => {
     initializeAuth();
+    requestNotificationPermission();
+    handleTokenRefresh();
   }, []);
 
   const isAuthenticated = () => Boolean(token);
@@ -75,6 +139,7 @@ const useAuthProvider = () => {
     try {
       const response: any = await doLogin({ data: user });
       const { accessToken, refreshToken, user: userData } = response.data;
+
       await Promise.all([
         Storage.setAuthToken(accessToken),
         Storage.setRefreshToken(refreshToken),
@@ -84,11 +149,15 @@ const useAuthProvider = () => {
           id: userData._id,
         }),
       ]);
+
       setToken(accessToken);
       setRefreshToken(refreshToken);
       setEmail(userData.email);
       setFirstName(userData.firstName);
       setId(userData._id);
+
+      // Register the device with FCM token
+      await registerDevice(accessToken);
     } catch (error: any) {
       throw new Error(error?.data?.message || "Login failed.");
     }
@@ -116,6 +185,27 @@ const useAuthProvider = () => {
     }
   };
 
+  const refreshTokens = async ({
+    accessToken,
+    refreshToken,
+  }: {
+    accessToken: string;
+    refreshToken: string;
+  }): Promise<void> => {
+    try {
+      await Promise.all([
+        Storage.setAuthToken(accessToken),
+        Storage.setRefreshToken(refreshToken),
+      ]);
+
+      setToken(accessToken);
+      setRefreshToken(refreshToken);
+    } catch (error) {
+      console.error("Error refreshing tokens:", error);
+      throw new Error("Failed to refresh tokens.");
+    }
+  };
+
   return {
     token,
     refreshToken,
@@ -126,6 +216,7 @@ const useAuthProvider = () => {
     login,
     signUp,
     logout,
+    refreshTokens,
   };
 };
 
