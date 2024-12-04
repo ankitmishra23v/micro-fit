@@ -34,11 +34,11 @@ export default function WelcomeScreen() {
         <Text className="text-gray-400 text-sm text-center mb-3">
           NEW TO MICRO.FIT?
         </Text>
-        <TouchableOpacity className="bg-white py-2 rounded-lg mb-4">
+        {/* <TouchableOpacity className="bg-white py-2 rounded-lg mb-4">
           <Text className="text-black text-lg font-bold text-center">
             SIGN UP WITH APPLE
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity
           className="bg-primary  py-2 rounded-lg"
           onPress={() => router.push("/screens/signup")}

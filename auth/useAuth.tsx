@@ -22,18 +22,23 @@ interface AuthContextType {
   login: (user: LoginData) => Promise<void>;
   signUp: (user: SignUpData) => Promise<void>;
   logout: () => Promise<void>;
+  refreshTokens: (newTokens: {
+    accessToken: string;
+    refreshToken: string;
+  }) => Promise<void>;
 }
 
-interface LoginData {
-  email: string;
-  password: string;
-}
+type LoginData = {
+  email?: string;
+  password?: string;
+};
 
 interface SignUpData {
-  firstName: string;
-  email: string;
-  password: string;
-  loginType: string;
+  firstName?: string;
+  email?: string;
+  password?: string;
+  loginType?: string;
+  code?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,6 +57,7 @@ const useAuthProvider = () => {
         Storage.getRefreshToken(),
         Storage.getUserData<{ email: string; firstName: string; id: string }>(),
       ]);
+
       if (accessToken && refresh && userData) {
         setToken(accessToken);
         setRefreshToken(refresh);
@@ -74,6 +80,7 @@ const useAuthProvider = () => {
     try {
       const response: any = await doLogin({ data: user });
       const { accessToken, refreshToken, user: userData } = response.data;
+
       await Promise.all([
         Storage.setAuthToken(accessToken),
         Storage.setRefreshToken(refreshToken),
@@ -83,7 +90,7 @@ const useAuthProvider = () => {
           id: userData._id,
         }),
       ]);
-      console.log("req token,", accessToken);
+
       setToken(accessToken);
       setRefreshToken(refreshToken);
       setEmail(userData.email);
@@ -116,6 +123,27 @@ const useAuthProvider = () => {
     }
   };
 
+  const refreshTokens = async ({
+    accessToken,
+    refreshToken,
+  }: {
+    accessToken: string;
+    refreshToken: string;
+  }): Promise<void> => {
+    try {
+      await Promise.all([
+        Storage.setAuthToken(accessToken),
+        Storage.setRefreshToken(refreshToken),
+      ]);
+
+      setToken(accessToken);
+      setRefreshToken(refreshToken);
+    } catch (error) {
+      console.error("Error refreshing tokens:", error);
+      throw new Error("Failed to refresh tokens.");
+    }
+  };
+
   return {
     token,
     refreshToken,
@@ -126,6 +154,7 @@ const useAuthProvider = () => {
     login,
     signUp,
     logout,
+    refreshTokens,
   };
 };
 

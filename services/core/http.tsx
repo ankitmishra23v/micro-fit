@@ -1,18 +1,27 @@
-import axios, {
-  AxiosRequestConfig,
-  AxiosResponse,
-  AxiosError,
-  CancelToken,
-} from "axios";
+import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import Storage from "../utilities/storage";
 
 const TIMEOUT = 3600000;
 const CONTENT_TYPE_JSON = "application/json";
 const UNKNOWN_ERR_MSG =
   "An unknown server error has occurred or the server may be unreachable.";
+const REFRESH_TOKEN_URL = `${process.env.EXPO_PUBLIC_REACT_NATIVE_APP_API_BASE_URL}/auth/refresh`;
 
 axios.defaults.headers.post["Content-Type"] = CONTENT_TYPE_JSON;
 axios.defaults.timeout = TIMEOUT;
+
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+const onTokenRefreshed = (token: string) => {
+  refreshSubscribers.forEach((callback) => callback(token));
+  refreshSubscribers = [];
+};
+
+const addRefreshSubscriber = (callback: (token: string) => void) => {
+  refreshSubscribers.push(callback);
+};
+
 axios.interceptors.request.use(
   async (config: any) => {
     const token = await Storage.getAuthToken();
@@ -30,27 +39,43 @@ axios.interceptors.response.use(
     const originalRequest: any = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve) => {
+          addRefreshSubscriber((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            resolve(axios(originalRequest));
+          });
+        });
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
         const refreshToken = await Storage.getRefreshToken();
-        console.log("Refresh Token:", refreshToken); // Debug log
         if (!refreshToken) throw new Error("Refresh token missing");
 
-        // Refresh the token
-        const response = await axios.post("/auth/refresh", { refreshToken });
-        const { accessToken } = response.data;
+        const response = await axios.post(REFRESH_TOKEN_URL, { refreshToken });
+        const { accessToken, refreshToken: newRefreshToken } = response.data;
 
-        // Save the new token
-        await Storage.setAuthToken(accessToken);
+        if (!accessToken || !newRefreshToken) {
+          throw new Error("Invalid token response");
+        }
 
-        // Retry the original request with the new token
+        await Promise.all([
+          Storage.setAuthToken(accessToken),
+          Storage.setRefreshToken(newRefreshToken),
+        ]);
+
+        isRefreshing = false;
+        onTokenRefreshed(accessToken);
+
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return axios(originalRequest);
       } catch (refreshError) {
-        console.error("Token refresh failed:", refreshError);
+        isRefreshing = false;
         await Storage.clear();
-        window.location.href = "/login"; // Redirect to login on failure
+        window.location.href = "screens/login";
         return Promise.reject(refreshError);
       }
     }
@@ -69,21 +94,20 @@ class Http {
     onUploadProgress,
     cancelToken,
   }: AxiosRequestConfig): Promise<T> {
+    const axiosConfig: AxiosRequestConfig = {
+      method,
+      headers,
+      url,
+      params,
+      onUploadProgress,
+      cancelToken,
+    };
+
+    if (["post", "put", "patch"].includes(method.toLowerCase()) && data) {
+      axiosConfig.data = data;
+    }
+
     try {
-      // Configure request without including unnecessary data fields
-      const axiosConfig: AxiosRequestConfig = {
-        method,
-        headers,
-        url,
-        params,
-        onUploadProgress,
-        cancelToken,
-      };
-
-      if (["post", "put", "patch"].includes(method.toLowerCase()) && data) {
-        axiosConfig.data = data;
-      }
-
       const response: AxiosResponse<T> = await axios(axiosConfig);
       return response.data;
     } catch (error: unknown) {
