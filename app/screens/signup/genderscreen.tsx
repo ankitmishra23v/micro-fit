@@ -10,7 +10,7 @@ const GenderAgeScreen = () => {
 
   const handleNext = () => {
     if (gender && age) {
-      router.push("/screens/signup/reminders");
+      router.push("/screens/login");
     } else {
       alert("Please fill in all fields");
     }

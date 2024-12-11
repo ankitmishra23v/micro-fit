@@ -9,21 +9,26 @@ import {
   ActivityIndicator,
   Dimensions,
   BackHandler,
+  Alert,
 } from "react-native";
-import { FontAwesome5 } from "@expo/vector-icons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import profileImage from "@/assets/images/user.png";
 import runImage from "@/assets/images/person-running.png";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/auth/useAuth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getAgentInstances } from "@/services/utilities/api";
+import {
+  getAgentInstances,
+  deleteAgentInstance,
+} from "@/services/utilities/api";
+import { toast } from "@/components/ToastManager";
 
 const HomeScreen = () => {
   const [userName, setUserName] = useState<string>("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [agentInstances, setAgentInstances] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [dropdownVisible, setDropdownVisible] = useState<string | null>(null);
   const { id, logout } = useAuth();
   const router = useRouter();
   const screenHeight = Dimensions.get("window").height;
@@ -81,42 +86,86 @@ const HomeScreen = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      console.log("logged out successfully");
       router.push("/screens/welcome");
     } catch (error) {
       console.error(error);
     }
   };
 
+  const handleDeleteAgent = async (agentId: string) => {
+    try {
+      await deleteAgentInstance(agentId);
+      setAgentInstances((prev) =>
+        prev.filter((item: any) => item._id !== agentId)
+      );
+      toast.success({ title: "goal delted successfully" });
+    } catch (error: any) {
+      toast.error({ title: error.message });
+    }
+  };
+
   const renderAgentCard = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      onPress={() => {
-        router.push({
-          pathname: "/home/agentTasks/[agentTasks]",
-          params: { agentTasks: item._id },
-        });
-      }}
-      className="bg-primary  flex flex-row px-4 py-3  gap-8 items-center rounded-lg mb-4"
-    >
-      <View className="bg-black h-[9vh] w-[11vh] flex items-center justify-center rounded-xl">
-        <Image
-          source={runImage}
-          style={{
-            height: "70%",
-            width: "70%",
-          }}
-          resizeMode="contain"
-        />
-      </View>
-      <View>
-        <Text className="text-white text-xl font-bold uppercase">
-          {item?.agentData?.name}
-        </Text>
-        <Text className="text-secondary text-md">
-          {item?.agentData?.description}
-        </Text>
-      </View>
-    </TouchableOpacity>
+    <View className="bg-primary flex flex-row px-4 py-3 gap-8 items-center rounded-lg mb-4 relative">
+      <TouchableOpacity
+        onPress={() => {
+          router.push({
+            pathname: "/home/agentTasks/[agentTasks]",
+            params: { agentTasks: item._id },
+          });
+        }}
+        className="flex-1 flex-row items-center gap-4"
+      >
+        <View className="bg-black h-[9vh] w-[11vh] flex items-center justify-center rounded-xl">
+          <Image
+            source={runImage}
+            style={{
+              height: "70%",
+              width: "70%",
+            }}
+            resizeMode="contain"
+          />
+        </View>
+        <View>
+          <Text className="text-white text-xl font-bold uppercase">
+            {item?.agentData?.name}
+          </Text>
+          <Text className="text-secondary text-md">
+            {item?.agentData?.description}
+          </Text>
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => {
+          setDropdownVisible(dropdownVisible === item._id ? null : item._id);
+        }}
+        className="absolute top-4 right-4"
+      >
+        <Ionicons name="ellipsis-vertical" size={28} color="white" />
+      </TouchableOpacity>
+      {dropdownVisible === item._id && (
+        <View className="absolute top-12 right-6 bg-red-500  px-4 py-2 rounded-lg shadow-lg">
+          <TouchableOpacity
+            onPress={() => {
+              setDropdownVisible(null);
+              Alert.alert(
+                "Delete Agent",
+                "Are you sure you want to delete this agent?",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: () => handleDeleteAgent(item._id),
+                  },
+                ]
+              );
+            }}
+          >
+            <Text className="text-white">Delete</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
   );
 
   return (
@@ -142,13 +191,12 @@ const HomeScreen = () => {
                 {userName}
               </Text>
             </View>
-
             <View className="flex flex-col gap-4">
               <TouchableOpacity
                 className="py-4 border-2 border-primary px-4 rounded-xl"
                 onPress={() => {
                   setDrawerOpen(false);
-                  router.push("/screens/profile");
+                  router.push("/home/profile");
                 }}
               >
                 <Text className="text-white text-lg">Edit Profile</Text>
@@ -195,7 +243,6 @@ const HomeScreen = () => {
               <Text className="text-white text-base">
                 Add a goal to track the progress
               </Text>
-
               <View className="w-full bg-black h-4 mt-3 rounded-2xl overflow-hidden">
                 <View
                   className="bg-orange-600  h-full"
@@ -238,7 +285,6 @@ const HomeScreen = () => {
               </View>
             )}
           </View>
-
           <TouchableOpacity
             className="bg-primary py-3 rounded-md mt-[16%] mb-[10%]"
             onPress={() => router.push("/screens/onboarding")}
@@ -247,18 +293,6 @@ const HomeScreen = () => {
               {agentInstances.length > 0 ? "Add a goal" : "Add your first goal"}
             </Text>
           </TouchableOpacity>
-
-          {/* <View className="flex-row justify-between items-center px-6 mt-10 mb-9">
-            <TouchableOpacity className="items-center">
-              <FontAwesome5 name="home" size={16} color="gray" />
-            </TouchableOpacity>
-            <TouchableOpacity className="items-center">
-              <FontAwesome5 name="dumbbell" size={16} color="gray" />
-            </TouchableOpacity>
-            <TouchableOpacity className="items-center">
-              <FontAwesome5 name="award" size={16} color="gray" />
-            </TouchableOpacity>
-          </View> */}
         </View>
       )}
     </SafeAreaView>

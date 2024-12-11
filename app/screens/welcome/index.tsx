@@ -21,12 +21,9 @@ const WelcomeScreen = () => {
   const router = useRouter();
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId:
-      "201822959439-mfpo2ad2v8bhudlovov7fdoqj110mn20.apps.googleusercontent.com", // Replace with your actual Android Client ID
-    iosClientId:
-      "201822959439-boucbjei7o5cohufd644g878kshoolu7.apps.googleusercontent.com",
-    webClientId:
-      "201822959439-a8u0v20p9tk6vf1g5ilsi0u3ioqhq0um.apps.googleusercontent.com", // Replace with your actual Web Client ID
+    androidClientId: process.env.EXPO_PUBLIC_ANDROID_CLIENT_ID,
+    iosClientId: process.env.EXPO_PUBLIC_IOS_CLIENT_ID,
+    webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID,
     scopes: ["profile", "email"],
   });
 
@@ -45,7 +42,6 @@ const WelcomeScreen = () => {
     return () => backHandler.remove();
   }, []);
 
-  // Handle the Google Sign-In response
   useEffect(() => {
     console.log("RESPONSSEEEEEE", response);
     if (response?.type === "success" && response?.params?.code) {
@@ -107,14 +103,14 @@ const WelcomeScreen = () => {
         <Text className="text-gray-400 text-sm text-center mb-3">
           NEW TO MICRO.FIT?
         </Text>
-        {Platform.OS === "ios" && (
+        {/* {Platform.OS === "ios" && (
           <TouchableOpacity className="bg-white py-2 rounded-lg mb-4">
             <Text className="text-black text-lg font-bold text-center">
               SIGN UP WITH APPLE
             </Text>
           </TouchableOpacity>
-        )}
-        <TouchableOpacity
+        )} */}
+        {/* <TouchableOpacity
           className="bg-white flex flex-row items-center justify-between py-2 px-4 rounded-lg mb-4"
           onPress={handleGoogleSignIn}
           disabled={!request}
@@ -126,7 +122,7 @@ const WelcomeScreen = () => {
           <Text className="flex-1 text-black text-lg font-bold text-center">
             SIGN UP WITH GOOGLE
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity
           className="bg-primary py-2 rounded-lg"
           onPress={() => router.push("/screens/signup")}

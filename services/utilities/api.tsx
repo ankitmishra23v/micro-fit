@@ -54,6 +54,12 @@ export const createAgentInstance = ({
   });
 };
 
+export const deleteAgentInstance = (instance_id: string) => {
+  return http.delete({
+    url: makeApiUrl(`user/agent/instance/${instance_id}`),
+  });
+};
+
 export const getAgentInstances = (userId: string) => {
   return http.get({
     url: makeApiUrl(`user/${userId}/agent/instances`),

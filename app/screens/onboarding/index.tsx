@@ -135,7 +135,7 @@ const OnboardingScreen = () => {
           justifyContent: "space-between",
         }}
         ListHeaderComponent={
-          <Text className="text-[4vh] text-white font-bold px-[4%] mt-[3em] mb-[8%]">
+          <Text className="text-[3vh] text-secondary font-bold px-[4%] mt-6 mb-[8%]">
             What do you want to improve?
           </Text>
         }
