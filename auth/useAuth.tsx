@@ -13,7 +13,7 @@ import {
 } from "../services/utilities/api";
 import messaging from "@react-native-firebase/messaging";
 import Storage from "../services/utilities/storage";
-import { Alert } from "react-native";
+import { Alert, Platform, PermissionsAndroid, Linking } from "react-native";
 
 interface AuthContextType {
   token: string | null;
@@ -52,6 +52,8 @@ const useAuthProvider = () => {
   const [email, setEmail] = useState<string | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
   const [id, setId] = useState<string | null>(null);
+  const [hasNotificationPermission, setHasNotificationPermission] =
+    useState<boolean>(false);
 
   const initializeAuth = async () => {
     try {
@@ -73,65 +75,97 @@ const useAuthProvider = () => {
     }
   };
 
-  const requestNotificationPermission = async () => {
+  const checkAndRequestPermission = async (): Promise<boolean> => {
     try {
-      const authStatus = await messaging().requestPermission();
-      const isAuthorized =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+      const currentPermission = await messaging().hasPermission();
 
-      if (isAuthorized) {
-        console.log("Notification permissions granted");
+      if (
+        currentPermission === messaging.AuthorizationStatus.AUTHORIZED ||
+        currentPermission === messaging.AuthorizationStatus.PROVISIONAL
+      ) {
+        return true;
+      }
+
+      if (Platform.OS === "android" && Platform.Version >= 33) {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
       } else {
-        console.warn("Notification permissions not granted");
+        const authStatus = await messaging().requestPermission();
+        return (
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL
+        );
       }
     } catch (error) {
-      console.error("Error requesting notification permissions:", error);
+      console.error(
+        "Error checking/requesting notification permissions:",
+        error
+      );
+      return false;
+    }
+  };
+
+  const showSettingsAlert = () => {
+    Alert.alert(
+      "Notification Permission Needed",
+      "Please enable notifications in your device settings to stay updated.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Open Settings",
+          onPress: () => Linking.openSettings(),
+        },
+      ]
+    );
+  };
+
+  const handleNotificationFlow = async () => {
+    const hasPermission = await checkAndRequestPermission();
+    if (hasPermission) {
+      setHasNotificationPermission(true);
+    } else {
+      showSettingsAlert();
     }
   };
 
   const registerDevice = async (accessToken: string) => {
     try {
+      const deviceType = Platform.OS === "ios" ? "IOS" : "ANDROID";
       const deviceToken = await messaging().getToken();
-      Alert.alert("FCM Device Token:", deviceToken);
+      Alert.alert("FCM Device Token", deviceToken);
 
-      // Send the device token to the backend
-      const response: any = await submitDeviceDetails({
-        data: {
-          accessToken,
-          deviceToken,
-        },
+      console.log("DETAILS OF DEVICE", deviceType);
+
+      await submitDeviceDetails({
+        data: { accessToken, deviceToken, deviceType },
       });
-      console.log("Device registered:", response.data);
     } catch (error) {
       console.error("Error registering device:", error);
     }
   };
 
-  const handleTokenRefresh = () => {
+  useEffect(() => {
+    initializeAuth();
+    if (!hasNotificationPermission) {
+      handleNotificationFlow();
+    }
     messaging().onTokenRefresh(async (newToken) => {
-      console.log("FCM Token refreshed:", newToken);
       if (token) {
         try {
           await submitDeviceDetails({
-            data: {
-              accessToken: token,
-              deviceToken: newToken,
-            },
+            data: { accessToken: token, deviceToken: newToken },
           });
-          console.log("Updated FCM token sent to the server");
         } catch (error) {
           console.error("Error updating FCM token:", error);
         }
       }
     });
-  };
-
-  useEffect(() => {
-    initializeAuth();
-    requestNotificationPermission();
-    handleTokenRefresh();
-  }, []);
+  }, [hasNotificationPermission]);
 
   const isAuthenticated = () => Boolean(token);
 
@@ -156,7 +190,6 @@ const useAuthProvider = () => {
       setFirstName(userData.firstName);
       setId(userData._id);
 
-      // Register the device with FCM token
       await registerDevice(accessToken);
     } catch (error: any) {
       throw new Error(error?.data?.message || "Login failed.");
@@ -220,11 +253,7 @@ const useAuthProvider = () => {
   };
 };
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider = ({ children }: any) => {
   const auth = useAuthProvider();
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 };

@@ -21,13 +21,9 @@ const GenderAgeScreen = () => {
       <View>
         <Header />
       </View>
-
-      {/* Title */}
       <Text className="text-[#CDCDCD] text-sm tracking-wider font-bold  mt-[30%] mb-[4%] uppercase">
         Tell us more about you
       </Text>
-
-      {/* Gender Section */}
       <View className="mb-6">
         <Text className="text-white text-2xl font-bold mb-4">
           What’s your gender?
@@ -54,8 +50,6 @@ const GenderAgeScreen = () => {
           ))}
         </View>
       </View>
-
-      {/* Age Section */}
       <View className="mb-6">
         <Text className="text-white text-lg mb-4">What’s your age?</Text>
         <TextInput
@@ -71,8 +65,6 @@ const GenderAgeScreen = () => {
           }}
         />
       </View>
-
-      {/* Next Button */}
       <TouchableOpacity
         className="h-12 bg-[#333333] rounded-lg justify-center items-center mt-4"
         onPress={handleNext}

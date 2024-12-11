@@ -27,7 +27,7 @@ export const ToastComponent = ({ type, title }: ToastProps) => {
           duration: 300,
           useNativeDriver: true,
         }).start();
-      }, 3000); // Auto-hide after 3 seconds
+      }, 5000); // Auto-hide after 3 seconds
     });
   }, [fadeAnim]);
 
@@ -95,8 +95,8 @@ const styles = StyleSheet.create({
     width: screenWidth * 0.9,
     padding: 16,
     borderRadius: 12,
-    backgroundColor: "#1A202C", // Gray-900
-    borderBottomWidth: 4, // Horizontal line thickness
+    backgroundColor: "#1A202C",
+    borderBottomWidth: 5,
     shadowColor: "#000",
     shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 2 },
@@ -114,11 +114,11 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 4, // Shadow around icon
+    shadowRadius: 4,
   },
   icon: {
     fontSize: 12,
-    color: "#fff", // White icon color
+    color: "#fff",
   },
   textContainer: {
     flex: 1,

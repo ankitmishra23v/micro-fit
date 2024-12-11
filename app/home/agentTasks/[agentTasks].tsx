@@ -10,6 +10,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { getAgentInstanceById } from "@/services/utilities/api";
 import { Ionicons } from "@expo/vector-icons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 const AgentTasksScreen = () => {
   const { agentTasks: instanceId } = useLocalSearchParams();
@@ -23,12 +24,8 @@ const AgentTasksScreen = () => {
       try {
         setLoading(true);
         const response: any = await getAgentInstanceById(instanceId as string);
-        const taskDetails = response.data?.agentData?.task_details.map(
-          (task: any) => ({
-            ...task,
-            checked: false,
-          })
-        );
+        const taskDetails = response.data?.agentData?.task_details;
+
         setInstanceName(response.data?.agentData?.name);
         setTasks(taskDetails);
       } catch (error) {
@@ -43,25 +40,9 @@ const AgentTasksScreen = () => {
     }
   }, [instanceId]);
 
-  const toggleTaskChecked = (taskId: string) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task._id === taskId ? { ...task, checked: !task.checked } : task
-      )
-    );
-  };
-
   const renderTask = ({ item }: { item: any }) => (
-    <View className="flex flex-row items-center justify-between bg-black px-4 py-5 rounded-lg mb-4">
-      <View className="flex flex-row items-center">
-        <TouchableOpacity
-          className="h-5 w-5 border-2 border-white rounded-md mr-3 flex items-center justify-center"
-          onPress={() => toggleTaskChecked(item._id)}
-        >
-          {item.checked && (
-            <Ionicons name="checkmark" size={14} color="white" />
-          )}
-        </TouchableOpacity>
+    <View className="flex flex-row items-center justify-center bg-black px-4 py-5 rounded-lg mb-4">
+      <View className="flex-1">
         <TouchableOpacity
           onPress={() =>
             router.push({
@@ -76,6 +57,22 @@ const AgentTasksScreen = () => {
           <Text className="text-white text-lg">{item.name}</Text>
         </TouchableOpacity>
       </View>
+      {item.feedbackCount > 0 && (
+        <TouchableOpacity
+          className="  px-4 rounded-lg ml-2"
+          onPress={() =>
+            router.push({
+              pathname: "/home/agentTasks/taskFeedback/[taskFeedback]",
+              params: {
+                taskFeedback: item.name,
+                instanceId,
+              },
+            })
+          }
+        >
+          <MaterialIcons name="feedback" size={28} color="#CDCDCD" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -114,19 +111,6 @@ const AgentTasksScreen = () => {
         </View>
       </View>
       <View className="flex flex-col gap-8">
-        {/* <View className="px-[4%] flex flex-row justify-between items-center">
-          <TouchableOpacity className="flex-1 bg-[#2C2C2E] p-2 rounded-lg mr-2">
-            <Text className="text-white text-center font-bold uppercase tracking-wider">
-              Today
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="flex-1 bg-[#1C1C1E] p-2 rounded-lg ml-2">
-            <Text className="text-gray-500 text-center font-bold uppercase tracking-wider">
-              Tomorrow
-            </Text>
-          </TouchableOpacity>
-        </View> */}
-
         <View className="px-[4%] py-[6%] mx-[4%] bg-primary rounded-lg overflow-scroll">
           {loading ? (
             <ActivityIndicator size="large" color="#FFFFFF" />

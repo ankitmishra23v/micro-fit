@@ -168,15 +168,24 @@ const HomeScreen = () => {
             <Text className="text-white text-2xl font-bold">
               Welcome, {userName}
             </Text>
-            <TouchableOpacity onPress={() => setDrawerOpen(true)}>
-              <View className="w-12 h-12 border-4 border-primary rounded-full overflow-hidden">
-                <Image
-                  source={profileImage}
-                  className="w-full h-full p-1"
-                  resizeMode="contain"
+            <View className="flex flex-row justify-between gap-2">
+              <TouchableOpacity onPress={() => {}}>
+                <Ionicons
+                  name="notifications-circle-outline"
+                  size={40}
+                  color="#CDCDCD"
                 />
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setDrawerOpen(true)}>
+                <View className="w-12 h-12 border-4 border-primary rounded-full overflow-hidden">
+                  <Image
+                    source={profileImage}
+                    className="w-full h-full p-1"
+                    resizeMode="contain"
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
           <View className="mt-4 ">
             <Text className="text-secondary text-sm uppercase mb-2 tracking-wider">
@@ -231,7 +240,7 @@ const HomeScreen = () => {
           </View>
 
           <TouchableOpacity
-            className="bg-primary py-3 rounded-md mt-[16%]"
+            className="bg-primary py-3 rounded-md mt-[16%] mb-[10%]"
             onPress={() => router.push("/screens/onboarding")}
           >
             <Text className="text-white text-center text-lg uppercase">
@@ -239,7 +248,7 @@ const HomeScreen = () => {
             </Text>
           </TouchableOpacity>
 
-          <View className="flex-row justify-between items-center px-6 mt-10 mb-9">
+          {/* <View className="flex-row justify-between items-center px-6 mt-10 mb-9">
             <TouchableOpacity className="items-center">
               <FontAwesome5 name="home" size={16} color="gray" />
             </TouchableOpacity>
@@ -249,7 +258,7 @@ const HomeScreen = () => {
             <TouchableOpacity className="items-center">
               <FontAwesome5 name="award" size={16} color="gray" />
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
       )}
     </SafeAreaView>

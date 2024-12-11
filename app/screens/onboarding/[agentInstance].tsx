@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { toast } from "@/components/ToastManager";
 import { createAgentInstance } from "@/services/utilities/api";
+import { Ionicons } from "@expo/vector-icons";
 
 const AgentDetailsScreen = () => {
   const { agentInstance } = useLocalSearchParams();
@@ -77,8 +78,14 @@ const AgentDetailsScreen = () => {
   return (
     <View className="bg-black h-full">
       <SafeAreaView>
-        <Header />
+        <View className="flex flex-row justify-start gap-[30%] items-center  pt-5 px-5">
+          <TouchableOpacity onPress={() => router.back()} className=" max-w-8">
+            <Ionicons name="chevron-back-sharp" size={24} color="white" />
+          </TouchableOpacity>
+          <Header />
+        </View>
       </SafeAreaView>
+
       <View className="px-6 pt-10">
         <Text className="text-white text-3xl font-bold text-center mb-6">
           Set your goal

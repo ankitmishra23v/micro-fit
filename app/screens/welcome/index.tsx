@@ -6,6 +6,7 @@ import {
   Image,
   Alert,
   Platform,
+  BackHandler,
 } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
@@ -30,6 +31,19 @@ const WelcomeScreen = () => {
   });
 
   console.log("Redirect URI:", request?.redirectUri);
+  useEffect(() => {
+    const backAction = () => {
+      BackHandler.exitApp();
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, []);
 
   // Handle the Google Sign-In response
   useEffect(() => {
