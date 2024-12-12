@@ -6,11 +6,11 @@ const UserProfile = () => {
   const router = useRouter();
 
   return (
-    <SafeAreaView className="flex-1 bg-black  ">
-      <TouchableOpacity className="mt-12" onPress={() => router.back()}>
+    <SafeAreaView className="flex-1 bg-black ">
+      <TouchableOpacity className="mt-12 px-4" onPress={() => router.back()}>
         <Ionicons name="chevron-back-sharp" size={24} color="white" />
       </TouchableOpacity>
-      <View className=" m-auto">
+      <View className=" m-auto px-4">
         <Text className="text-secondary text-xl text-center">Coming soon</Text>
       </View>
     </SafeAreaView>

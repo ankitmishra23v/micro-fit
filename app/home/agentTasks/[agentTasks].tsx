@@ -79,7 +79,7 @@ const AgentTasksScreen = () => {
   return (
     <SafeAreaView className="bg-black flex-1 flex flex-col justify-around  pb-[4%]">
       <View className="flex flex-col gap-8">
-        <View className="flex flex-row items-center justify-between px-[4%] pt-[2%]">
+        <View className="flex flex-row items-center justify-between px-[4%] ">
           <TouchableOpacity
             onPress={() => {
               router.back();

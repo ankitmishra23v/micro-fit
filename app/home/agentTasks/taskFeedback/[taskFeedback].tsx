@@ -113,7 +113,7 @@ const TaskFeedback = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View className="bg-black flex-1 px-4 pt-[2%]">
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.back()} className="mt-4">
           <Ionicons name="chevron-back" size={28} color="white" />
         </TouchableOpacity>
         <Text className="text-secondary text-xl font-bold mb-4 mt-8">
@@ -137,12 +137,12 @@ const TaskFeedback = () => {
               />
               <TouchableOpacity
                 className={`py-3 px-4 rounded-lg mt-4 ${
-                  submitting ? "bg-gray-500" : "bg-blue-500"
+                  submitting ? "bg-gray-500" : "bg-blue-500 "
                 }`}
                 onPress={handleSubmitAnswers}
                 disabled={submitting}
               >
-                <Text className="text-white text-center font-bold">
+                <Text className="text-white text-center font-bold  tracking-wider uppercase">
                   {submitting ? "Submitting..." : "Submit Feedback"}
                 </Text>
               </TouchableOpacity>
