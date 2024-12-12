@@ -11,10 +11,13 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.tevis.microskills",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
-        }
+        },
+
+        "LSApplicationQueriesSchemes": ["com.googleusercontent.apps"]
       }
     },
     "android": {
@@ -30,6 +33,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "@react-native-firebase/app",
       "expo-router",
       [
         "expo-splash-screen",
@@ -44,6 +48,9 @@
         {
           "android": {
             "usesCleartextTraffic": true
+          },
+          "ios": {
+            "useFrameworks": "static"
           }
         }
       ]

@@ -15,7 +15,6 @@ export const signUp = ({ data }: { data: Record<string, any> }) => {
 };
 
 export const logIn = ({ data }: { data: Record<string, any> }) => {
-  console.log("URLLLLLLL:", makeApiUrl("users/login"));
   return http.post({
     url: makeApiUrl("users/login"),
     data,
@@ -55,6 +54,12 @@ export const createAgentInstance = ({
   });
 };
 
+export const deleteAgentInstance = (instance_id: string) => {
+  return http.delete({
+    url: makeApiUrl(`user/agent/instance/${instance_id}`),
+  });
+};
+
 export const getAgentInstances = (userId: string) => {
   return http.get({
     url: makeApiUrl(`user/${userId}/agent/instances`),
@@ -70,5 +75,57 @@ export const getAgentInstanceById = (instanceId: string) => {
 export const getDataByTask = (instanceId: string, task: string) => {
   return http.get({
     url: makeApiUrl(`instances/${instanceId}/task/${task}/data`),
+  });
+};
+
+export const submitDeviceDetails = ({
+  data,
+}: {
+  data: Record<string, any>;
+}) => {
+  return http.post({
+    url: makeApiUrl("user/device/register"),
+    data,
+  });
+};
+
+export const sendFeedback = ({
+  data,
+  user_id,
+}: {
+  data: Record<string, any>;
+  user_id: string;
+}) => {
+  return http.post({
+    url: makeApiUrl(`user/${user_id}/feedback`),
+    data,
+  });
+};
+
+export const getScalFeedback = ({
+  instance_id,
+  taskKey,
+  params,
+}: {
+  instance_id: string;
+  taskKey: string;
+  params: any;
+}) => {
+  return http.get({
+    url: makeApiUrl(`instance/${instance_id}/task/${taskKey}/feedbacks`),
+    params,
+  });
+};
+
+export const submitScalFeedback = ({
+  feedback_id,
+  data,
+}: {
+  feedback_id: string;
+  data: Record<string, any>;
+}) => {
+  return http.put({
+    url: makeApiUrl(`feedback/${feedback_id}`),
+    data,
   });
 };

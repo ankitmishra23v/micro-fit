@@ -27,18 +27,18 @@ export const ToastComponent = ({ type, title }: ToastProps) => {
           duration: 300,
           useNativeDriver: true,
         }).start();
-      }, 3000); // Auto-hide after 3 seconds
+      }, 5000);
     });
   }, [fadeAnim]);
 
   const getBorderBottomStyle = () => {
     switch (type) {
       case "success":
-        return { borderBottomColor: "#4CAF50" }; // Green for success
+        return { borderBottomColor: "#4CAF50" };
       case "error":
-        return { borderBottomColor: "#F44336" }; // Red for error
+        return { borderBottomColor: "#F44336" };
       case "warning":
-        return { borderBottomColor: "#FFC107" }; // Yellow for warning
+        return { borderBottomColor: "#FFC107" };
       default:
         return {};
     }
@@ -58,34 +58,52 @@ export const ToastComponent = ({ type, title }: ToastProps) => {
   };
 
   return (
-    <Animated.View
-      style={[
-        styles.toastContainer,
-        getBorderBottomStyle(),
-        {
-          opacity: fadeAnim,
-          transform: [
-            {
-              translateY: fadeAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [50, 0],
-              }),
-            },
-          ],
-        },
-      ]}
-    >
-      <View style={styles.iconContainer}>
-        <Text style={styles.icon}>{getIcon()}</Text>
-      </View>
-      <View style={styles.textContainer}>
-        <Text style={styles.toastTitle}>{title}</Text>
-      </View>
-    </Animated.View>
+    <View style={styles.wrapper}>
+      <View style={styles.backdrop} />
+      <Animated.View
+        style={[
+          styles.toastContainer,
+          getBorderBottomStyle(),
+          {
+            opacity: fadeAnim,
+            transform: [
+              {
+                translateY: fadeAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [50, 0],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <View style={styles.iconContainer}>
+          <Text style={styles.icon}>{getIcon()}</Text>
+        </View>
+        <View style={styles.textContainer}>
+          <Text style={styles.toastTitle}>{title}</Text>
+        </View>
+      </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: -1,
+  },
   toastContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -95,8 +113,8 @@ const styles = StyleSheet.create({
     width: screenWidth * 0.9,
     padding: 16,
     borderRadius: 12,
-    backgroundColor: "#1A202C", // Gray-900
-    borderBottomWidth: 4, // Horizontal line thickness
+    backgroundColor: "#1A202C",
+    borderBottomWidth: 5,
     shadowColor: "#000",
     shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 2 },
@@ -107,24 +125,24 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.1)", // Light background for the icon
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 4, // Shadow around icon
+    shadowRadius: 4,
   },
   icon: {
     fontSize: 12,
-    color: "#fff", // White icon color
+    color: "#fff",
   },
   textContainer: {
     flex: 1,
   },
   toastTitle: {
-    color: "#fff", // White text
+    color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
   },
