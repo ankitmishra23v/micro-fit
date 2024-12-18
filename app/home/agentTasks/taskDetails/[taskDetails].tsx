@@ -13,21 +13,27 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { toast } from "@/components/ToastManager";
 import { Ionicons } from "@expo/vector-icons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import { getDataByTask, sendFeedback } from "@/services/utilities/api";
+import {
+  getDataByTask,
+  sendFeedback,
+  completeTask,
+} from "@/services/utilities/api";
 import { useAuth } from "@/auth/useAuth";
 
 const TaskDetails = () => {
-  const { taskDetails, instanceId } = useLocalSearchParams();
+  const { taskDetails, instanceId, taskId, subdataFirstId, action } =
+    useLocalSearchParams();
   const router = useRouter();
   const { id } = useAuth();
   const taskName = taskDetails as string;
   const instance = instanceId as string;
 
-  const [taskData, setTaskData] = useState<any>(null); // Changed to single object
+  const [taskData, setTaskData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [userInput, setUserInput] = useState<string>("");
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isCompleteLoading, setIsCompleteLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchTaskData = async () => {
@@ -35,7 +41,7 @@ const TaskDetails = () => {
         setLoading(true);
         const response: any = await getDataByTask(instance, taskName);
         if (response?.data && response.data.length > 0) {
-          setTaskData(response.data[0]); // Set the first element only
+          setTaskData(response.data[0]);
         }
       } catch (error) {
         console.error("Error fetching task data:", error);
@@ -54,9 +60,7 @@ const TaskDetails = () => {
       Alert.alert("Input Required", "Please feed in your issue.");
       return;
     }
-
     setIsLoading(true);
-
     try {
       const userId: any = id;
       const feedbackData = {
@@ -78,7 +82,7 @@ const TaskDetails = () => {
         data: feedbackData,
         user_id: userId,
       });
-      console.log("Responseeeeeee", response);
+
       toast.success({
         title:
           "Thank you for your feedback. Our AI will generate a new version of this task tailored to your needs shortly.",
@@ -88,7 +92,6 @@ const TaskDetails = () => {
       setIsModalVisible(false);
     } catch (error) {
       console.error("Error submitting feedback:", error);
-
       toast.error({
         title: "Failed to submit your feedback. Please try again later.",
       });
@@ -96,6 +99,48 @@ const TaskDetails = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCompleteTask = () => {
+    Alert.alert(
+      "Confirmation",
+      "Do you want to mark this task as completed?",
+      [
+        {
+          text: "No",
+          onPress: () => {},
+          style: "cancel",
+        },
+        {
+          text: "Yes",
+          onPress: async () => {
+            try {
+              setIsCompleteLoading(true);
+              const payload = {
+                taskId: taskId,
+                taskDataID: subdataFirstId,
+                message: "",
+              };
+              const response: any = await completeTask({
+                data: payload,
+                instace_id: instance,
+              });
+              toast.success({
+                title: response?.data?.message,
+              });
+              router.back();
+            } catch (error: any) {
+              toast.error({
+                title: error?.data?.message,
+              });
+            } finally {
+              setIsCompleteLoading(false);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   if (loading) {
@@ -125,7 +170,9 @@ const TaskDetails = () => {
           {taskData ? (
             <View className="bg-primary p-4 rounded-lg">
               <Text className="text-white text-base">
-                {taskData.jsonData?.text || "No text available"}
+                {taskData.jsonData?.text ||
+                  taskData.jsonData?.task ||
+                  "No text available"}
               </Text>
             </View>
           ) : (
@@ -133,14 +180,25 @@ const TaskDetails = () => {
           )}
         </View>
         <TouchableOpacity
-          className={`bg-primary py-4 rounded-lg mb-4 ${
-            taskData ? "block" : "hidden"
-          }`}
+          className={`${
+            action === "true" ? "bg-gray-800" : "bg-primary"
+          } py-4 rounded-lg mb-4 ${taskData ? "block" : "hidden"}`}
+          onPress={handleCompleteTask}
+          disabled={isCompleteLoading || action === "true"}
         >
-          <Text className="text-secondary text-center tracking-wider font-bold uppercase">
-            Complete
-          </Text>
+          {isCompleteLoading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : action === "true" ? (
+            <Text className="text-secondary text-center tracking-wider font-bold uppercase">
+              Completed
+            </Text>
+          ) : (
+            <Text className="text-secondary text-center tracking-wider font-bold uppercase">
+              Complete
+            </Text>
+          )}
         </TouchableOpacity>
+
         <TouchableOpacity
           className="bg-primary py-4 rounded-lg mb-16"
           onPress={() => setIsModalVisible(true)}
@@ -172,7 +230,16 @@ const TaskDetails = () => {
             />
             <View className="flex-row justify-between mt-6">
               <TouchableOpacity
-                className={`bg-blue-500 py-3 rounded-lg flex-1 mr-2 ${
+                className={`bg-gray-500 py-3 rounded-lg flex-1 mr-2 ${
+                  isLoading ? "opacity-50" : ""
+                }`}
+                onPress={() => setIsModalVisible(false)}
+                disabled={isLoading}
+              >
+                <Text className="text-white text-center font-bold">Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className={`bg-blue-500 py-3 rounded-lg flex-1 ml-2 ${
                   isLoading ? "opacity-50" : ""
                 }`}
                 onPress={handleUserInputSubmit}
@@ -185,15 +252,6 @@ const TaskDetails = () => {
                     Submit
                   </Text>
                 )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                className={`bg-gray-500 py-3 rounded-lg flex-1 ml-2 ${
-                  isLoading ? "opacity-50" : ""
-                }`}
-                onPress={() => setIsModalVisible(false)}
-                disabled={isLoading}
-              >
-                <Text className="text-white text-center font-bold">Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>

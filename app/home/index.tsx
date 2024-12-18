@@ -13,6 +13,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";
+
 import Ionicons from "@expo/vector-icons/Ionicons";
 import profileImage from "@/assets/images/user.png";
 import runImage from "@/assets/images/person-running.png";
@@ -33,6 +34,7 @@ const HomeScreen = () => {
   const [dropdownVisible, setDropdownVisible] = useState<string | null>(null);
   const { id, logout } = useAuth();
   const router = useRouter();
+  const userId = id as string;
   const screenHeight = Dimensions.get("window").height;
 
   useEffect(() => {
@@ -74,7 +76,10 @@ const HomeScreen = () => {
     const fetchAgentInstances = async () => {
       try {
         setLoading(true);
-        const response: any = await getAgentInstances(id as string);
+        const response: any = await getAgentInstances({
+          userId,
+          params: {},
+        });
         setAgentInstances(response.data || []);
       } catch (error) {
         console.error(error);
@@ -102,7 +107,7 @@ const HomeScreen = () => {
       );
       toast.success({ title: "Goal deleted successfully" });
     } catch (error: any) {
-      toast.error({ title: error.message });
+      toast.error({ title: error?.data?.message || "Unable to delete " });
     }
   };
 
@@ -211,6 +216,15 @@ const HomeScreen = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   className="py-4 border-2 border-primary px-4 rounded-xl"
+                  onPress={() => {
+                    // setDrawerOpen(false);
+                    router.push("/home/dashboard");
+                  }}
+                >
+                  <Text className="text-white text-lg">Dashboard</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="py-4 border-2 border-primary px-4 rounded-xl"
                   onPress={handleLogout}
                 >
                   <Text className="text-white text-lg">Logout</Text>
@@ -277,9 +291,9 @@ const HomeScreen = () => {
                     gap: 8,
                     paddingBottom: 16,
                   }}
-                  showsVerticalScrollIndicator={false}
+                  showsVerticalScrollIndicator={true}
                   style={{
-                    maxHeight: screenHeight * 0.27,
+                    maxHeight: screenHeight * 0.4,
                   }}
                 />
               ) : (
@@ -295,6 +309,7 @@ const HomeScreen = () => {
                 </View>
               )}
             </View>
+
             <TouchableOpacity
               className="bg-primary py-3 rounded-md mt-[16%] mb-[10%]"
               onPress={() => router.push("/screens/onboarding")}

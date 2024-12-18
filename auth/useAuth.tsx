@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useEffect,
-} from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   logIn as doLogin,
   signUp as doSignUp,
@@ -13,7 +7,9 @@ import {
 } from "../services/utilities/api";
 import messaging from "@react-native-firebase/messaging";
 import Storage from "../services/utilities/storage";
-import { Alert, Platform, PermissionsAndroid, Linking } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Alert, Platform, PermissionsAndroid } from "react-native";
+import { useRouter } from "expo-router";
 
 interface AuthContextType {
   token: string | null;
@@ -44,9 +40,13 @@ interface SignUpData {
   code?: string;
 }
 
+const NOTIFICATION_PROMPT_KEY = "lastNotificationPrompt";
+const PROMPT_DELAY_DAYS = 1;
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const useAuthProvider = () => {
+  const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -71,6 +71,7 @@ const useAuthProvider = () => {
         setId(userData.id);
       }
     } catch (error) {
+      router.push("/screens/welcome");
       console.error("Error initializing auth:", error);
     }
   };
@@ -86,18 +87,21 @@ const useAuthProvider = () => {
         return true;
       }
 
-      if (Platform.OS === "android" && Platform.Version >= 33) {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } else {
-        const authStatus = await messaging().requestPermission();
-        return (
-          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-          authStatus === messaging.AuthorizationStatus.PROVISIONAL
-        );
+      const lastPrompt = await AsyncStorage.getItem(NOTIFICATION_PROMPT_KEY);
+      const now = new Date().getTime();
+      const delayTime = PROMPT_DELAY_DAYS * 24 * 60 * 60 * 1000;
+
+      if (lastPrompt && now - parseInt(lastPrompt, 10) < delayTime) {
+        return false;
       }
+
+      const authStatus = await messaging().requestPermission();
+      await AsyncStorage.setItem(NOTIFICATION_PROMPT_KEY, now.toString());
+
+      return (
+        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+        authStatus === messaging.AuthorizationStatus.PROVISIONAL
+      );
     } catch (error) {
       console.error(
         "Error checking/requesting notification permissions:",
@@ -107,29 +111,10 @@ const useAuthProvider = () => {
     }
   };
 
-  const showSettingsAlert = () => {
-    Alert.alert(
-      "Notification Permission Needed",
-      "Please enable notifications in your device settings to stay updated.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Open Settings",
-          onPress: () => Linking.openSettings(),
-        },
-      ]
-    );
-  };
-
   const handleNotificationFlow = async () => {
     const hasPermission = await checkAndRequestPermission();
     if (hasPermission) {
       setHasNotificationPermission(true);
-    } else {
-      showSettingsAlert();
     }
   };
 
@@ -138,8 +123,6 @@ const useAuthProvider = () => {
       const deviceType = Platform.OS === "ios" ? "IOS" : "ANDROID";
       const deviceToken = await messaging().getToken();
       Alert.alert("FCM Device Token", deviceToken);
-
-      console.log("DETAILS OF DEVICE", deviceType);
 
       await submitDeviceDetails({
         data: { accessToken, deviceToken, deviceType },
@@ -192,6 +175,7 @@ const useAuthProvider = () => {
 
       await registerDevice(accessToken);
     } catch (error: any) {
+      console.log("errrrrrrrr:", error.data);
       throw new Error(error?.data?.message || "Login failed.");
     }
   };
