@@ -9,6 +9,7 @@ import messaging from "@react-native-firebase/messaging";
 import Storage from "../services/utilities/storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert, Platform, PermissionsAndroid } from "react-native";
+import { useRouter } from "expo-router";
 
 interface AuthContextType {
   token: string | null;
@@ -45,6 +46,7 @@ const PROMPT_DELAY_DAYS = 1;
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const useAuthProvider = () => {
+  const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -69,6 +71,7 @@ const useAuthProvider = () => {
         setId(userData.id);
       }
     } catch (error) {
+      router.push("/screens/welcome");
       console.error("Error initializing auth:", error);
     }
   };
@@ -119,7 +122,6 @@ const useAuthProvider = () => {
     try {
       const deviceType = Platform.OS === "ios" ? "IOS" : "ANDROID";
       const deviceToken = await messaging().getToken();
-      Alert.alert("FCM Device Token", deviceToken);
 
       await submitDeviceDetails({
         data: { accessToken, deviceToken, deviceType },
@@ -172,6 +174,7 @@ const useAuthProvider = () => {
 
       await registerDevice(accessToken);
     } catch (error: any) {
+      console.log("errrrrrrrr:", error.data);
       throw new Error(error?.data?.message || "Login failed.");
     }
   };

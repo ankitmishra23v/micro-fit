@@ -19,7 +19,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
     setToast(toastProps);
     setTimeout(() => {
       setToast(null); // Hide toast after 3 seconds
-    }, 3000);
+    }, 2500);
   };
 
   return (

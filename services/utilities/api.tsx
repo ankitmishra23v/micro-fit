@@ -1,9 +1,9 @@
 import http from "../core/http";
 const getApiBaseUrl = process.env.EXPO_PUBLIC_REACT_NATIVE_APP_API_BASE_URL;
-
 if (!getApiBaseUrl) {
   throw new Error("API Base URL is not defined.");
 }
+console.log(getApiBaseUrl);
 
 const makeApiUrl = (url: string) => `${getApiBaseUrl}${url}`;
 
@@ -60,21 +60,48 @@ export const deleteAgentInstance = (instance_id: string) => {
   });
 };
 
-export const getAgentInstances = (userId: string) => {
+export const getAgentInstances = ({
+  userId,
+  params,
+}: {
+  userId: string;
+  params: any;
+}) => {
   return http.get({
     url: makeApiUrl(`user/${userId}/agent/instances`),
+    params,
   });
 };
 
-export const getAgentInstanceById = (instanceId: string) => {
+export const getAgentInstanceById = ({
+  instanceId,
+  params,
+}: {
+  instanceId: string;
+  params: any;
+}) => {
   return http.get({
     url: makeApiUrl(`user/agent/instance/${instanceId}`),
+    params,
   });
 };
 
 export const getDataByTask = (instanceId: string, task: string) => {
   return http.get({
     url: makeApiUrl(`instances/${instanceId}/task/${task}/data`),
+  });
+};
+
+export const completeTask = ({
+  data,
+  instace_id,
+}: {
+  data: Record<string, any>;
+  instace_id: string;
+}) => {
+  return http.post({
+    url: makeApiUrl(`instance/${instace_id}/task/complete`),
+    data,
   });
 };
 
