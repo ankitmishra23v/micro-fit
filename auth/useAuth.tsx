@@ -122,7 +122,6 @@ const useAuthProvider = () => {
     try {
       const deviceType = Platform.OS === "ios" ? "IOS" : "ANDROID";
       const deviceToken = await messaging().getToken();
-      Alert.alert("FCM Device Token", deviceToken);
 
       await submitDeviceDetails({
         data: { accessToken, deviceToken, deviceType },
