@@ -8,7 +8,7 @@ import {
 import messaging from "@react-native-firebase/messaging";
 import Storage from "../services/utilities/storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Alert, Platform, PermissionsAndroid } from "react-native";
+import { Platform, PermissionsAndroid } from "react-native";
 import { useRouter } from "expo-router";
 
 interface AuthContextType {
@@ -16,15 +16,12 @@ interface AuthContextType {
   refreshToken: string | null;
   email: string | null;
   firstName: string | null;
+  lastName: string | null;
   id: string | null;
   isAuthenticated: () => boolean;
   login: (user: LoginData) => Promise<void>;
   signUp: (user: SignUpData) => Promise<void>;
   logout: () => Promise<void>;
-  refreshTokens: (newTokens: {
-    accessToken: string;
-    refreshToken: string;
-  }) => Promise<void>;
 }
 
 type LoginData = {
@@ -34,6 +31,7 @@ type LoginData = {
 
 interface SignUpData {
   firstName?: string;
+  lastName?: string;
   email?: string;
   password?: string;
   loginType?: string;
@@ -51,6 +49,7 @@ const useAuthProvider = () => {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
+  const [lastName, setLastName] = useState<string | null>(null);
   const [id, setId] = useState<string | null>(null);
   const [hasNotificationPermission, setHasNotificationPermission] =
     useState<boolean>(false);
@@ -60,7 +59,12 @@ const useAuthProvider = () => {
       const [accessToken, refresh, userData] = await Promise.all([
         Storage.getAuthToken(),
         Storage.getRefreshToken(),
-        Storage.getUserData<{ email: string; firstName: string; id: string }>(),
+        Storage.getUserData<{
+          email: string;
+          firstName: string;
+          lastName: string;
+          id: string;
+        }>(),
       ]);
 
       if (accessToken && refresh && userData) {
@@ -68,6 +72,7 @@ const useAuthProvider = () => {
         setRefreshToken(refresh);
         setEmail(userData.email);
         setFirstName(userData.firstName);
+        setLastName(userData.lastName);
         setId(userData.id);
       }
     } catch (error) {
@@ -78,30 +83,46 @@ const useAuthProvider = () => {
 
   const checkAndRequestPermission = async (): Promise<boolean> => {
     try {
-      const currentPermission = await messaging().hasPermission();
+      if (Platform.OS === "ios") {
+        const currentPermission = await messaging().hasPermission();
 
-      if (
-        currentPermission === messaging.AuthorizationStatus.AUTHORIZED ||
-        currentPermission === messaging.AuthorizationStatus.PROVISIONAL
-      ) {
-        return true;
+        if (
+          currentPermission === messaging.AuthorizationStatus.AUTHORIZED ||
+          currentPermission === messaging.AuthorizationStatus.PROVISIONAL
+        ) {
+          return true;
+        }
+
+        const lastPrompt = await AsyncStorage.getItem(NOTIFICATION_PROMPT_KEY);
+        const now = new Date().getTime();
+        const delayTime = PROMPT_DELAY_DAYS * 24 * 60 * 60 * 1000;
+
+        if (lastPrompt && now - parseInt(lastPrompt, 10) < delayTime) {
+          return false;
+        }
+
+        const authStatus = await messaging().requestPermission();
+        await AsyncStorage.setItem(NOTIFICATION_PROMPT_KEY, now.toString());
+
+        return (
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL
+        );
       }
 
-      const lastPrompt = await AsyncStorage.getItem(NOTIFICATION_PROMPT_KEY);
-      const now = new Date().getTime();
-      const delayTime = PROMPT_DELAY_DAYS * 24 * 60 * 60 * 1000;
+      if (Platform.OS === "android") {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+        );
 
-      if (lastPrompt && now - parseInt(lastPrompt, 10) < delayTime) {
-        return false;
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          return true;
+        } else {
+          return false;
+        }
       }
 
-      const authStatus = await messaging().requestPermission();
-      await AsyncStorage.setItem(NOTIFICATION_PROMPT_KEY, now.toString());
-
-      return (
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL
-      );
+      return false;
     } catch (error) {
       console.error(
         "Error checking/requesting notification permissions:",
@@ -162,6 +183,7 @@ const useAuthProvider = () => {
         Storage.setUserData({
           email: userData.email,
           firstName: userData.firstName,
+          lastName: userData.lastName,
           id: userData._id,
         }),
       ]);
@@ -170,11 +192,11 @@ const useAuthProvider = () => {
       setRefreshToken(refreshToken);
       setEmail(userData.email);
       setFirstName(userData.firstName);
+      setLastName(userData.lastName);
       setId(userData._id);
 
       await registerDevice(accessToken);
     } catch (error: any) {
-      console.log("errrrrrrrr:", error.data);
       throw new Error(error?.data?.message || "Login failed.");
     }
   };
@@ -195,30 +217,10 @@ const useAuthProvider = () => {
       setRefreshToken(null);
       setEmail(null);
       setFirstName(null);
+      setLastName(null);
       setId(null);
     } catch (error) {
       throw new Error("Logout failed.");
-    }
-  };
-
-  const refreshTokens = async ({
-    accessToken,
-    refreshToken,
-  }: {
-    accessToken: string;
-    refreshToken: string;
-  }): Promise<void> => {
-    try {
-      await Promise.all([
-        Storage.setAuthToken(accessToken),
-        Storage.setRefreshToken(refreshToken),
-      ]);
-
-      setToken(accessToken);
-      setRefreshToken(refreshToken);
-    } catch (error) {
-      console.error("Error refreshing tokens:", error);
-      throw new Error("Failed to refresh tokens.");
     }
   };
 
@@ -227,12 +229,12 @@ const useAuthProvider = () => {
     refreshToken,
     email,
     firstName,
+    lastName,
     id,
     isAuthenticated,
     login,
     signUp,
     logout,
-    refreshTokens,
   };
 };
 

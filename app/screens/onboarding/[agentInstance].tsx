@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Header from "@/components/Header";
@@ -33,24 +33,14 @@ const AgentDetailsScreen = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.sleeping_hours) {
-      toast.error({ title: "Please provide your sleeping hours." });
-      return;
-    }
-    if (!formData.current_sleep_type) {
-      toast.error({ title: "Please provide your current sleep type." });
-      return;
-    }
-    if (!formData.sleep_goal) {
-      toast.error({ title: "Please provide your sleep goal." });
-      return;
-    }
-    if (!formData.diet) {
-      toast.error({ title: "Please provide your diet." });
-      return;
-    }
-    if (!formData.sleep_time) {
-      toast.error({ title: "Please provide your sleep time." });
+    if (
+      !formData.sleeping_hours ||
+      !formData.current_sleep_type ||
+      !formData.sleep_goal ||
+      !formData.diet ||
+      !formData.sleep_time
+    ) {
+      toast.error({ title: "Please fill all the fields." });
       return;
     }
 
@@ -62,7 +52,7 @@ const AgentDetailsScreen = () => {
       setLoading(true);
       const response = await createAgentInstance({
         data: payload,
-        userId: agentInstance as string,
+        agentId: agentInstance as string,
       });
 
       toast.success({ title: "Goal added successfully" });
@@ -78,56 +68,156 @@ const AgentDetailsScreen = () => {
   return (
     <View className="bg-black h-full">
       <SafeAreaView>
-        <View className="flex flex-row justify-start gap-[30%] items-center  pt-5 px-5">
-          <TouchableOpacity onPress={() => router.back()} className=" max-w-8">
+        <View className="flex flex-row justify-start gap-[30%] items-center pt-5 px-5">
+          <TouchableOpacity onPress={() => router.back()} className="max-w-8">
             <Ionicons name="chevron-back-sharp" size={24} color="white" />
           </TouchableOpacity>
-          <Header />
+          {/* <Header /> */}
         </View>
       </SafeAreaView>
 
-      <View className="px-6 pt-10">
-        <Text className="text-white text-3xl font-bold text-center mb-6">
-          Set your goal
-        </Text>
-        <View className="flex flex-col gap-4">
-          <TextInput
-            className="w-full h-12 border border-primary text-white px-4 rounded-md"
-            placeholder="Sleeping Hours"
-            placeholderTextColor="#888"
-            value={formData.sleeping_hours}
-            onChangeText={(text) => handleInputChange("sleeping_hours", text)}
-          />
-          <TextInput
-            className="w-full h-12 border border-primary text-white px-4 rounded-md"
-            placeholder="Current Sleep Type"
-            placeholderTextColor="#888"
-            value={formData.current_sleep_type}
-            onChangeText={(text) =>
-              handleInputChange("current_sleep_type", text)
-            }
-          />
-          <TextInput
-            className="w-full h-12 border border-primary text-white px-4 rounded-md"
-            placeholder="Sleep Goal"
-            placeholderTextColor="#888"
-            value={formData.sleep_goal}
-            onChangeText={(text) => handleInputChange("sleep_goal", text)}
-          />
-          <TextInput
-            className="w-full h-12 border border-primary text-white px-4 rounded-md"
-            placeholder="Diet"
-            placeholderTextColor="#888"
-            value={formData.diet}
-            onChangeText={(text) => handleInputChange("diet", text)}
-          />
-          <TextInput
-            className="w-full h-12 border border-primary text-white px-4 rounded-md"
-            placeholder="Sleep Time"
-            placeholderTextColor="#888"
-            value={formData.sleep_time}
-            onChangeText={(text) => handleInputChange("sleep_time", text)}
-          />
+      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}>
+        <View className="px-4">
+          <Text className="text-white text-3xl font-bold text-center mb-12">
+            Set Your Sleep Goal
+          </Text>
+
+          {/* Sleeping Hours Section */}
+          <Text className="text-secondary text-m font-semibold tracking-wider mb-4 uppercase">
+            How many hours do you usually sleep each night?
+          </Text>
+          <View className="flex flex-wrap flex-row justify-between mb-6">
+            {["4", "6", "8", "10"].map((hour) => (
+              <TouchableOpacity
+                key={hour}
+                className={`p-4 rounded-lg shadow-lg ${
+                  formData.sleeping_hours === hour ? "bg-white" : "bg-[#292929]"
+                } flex-1 mb-4 mr-4 min-w-[120px]`}
+                onPress={() => handleInputChange("sleeping_hours", hour)}
+              >
+                <Text
+                  className={`text-lg ${
+                    formData.sleeping_hours === hour
+                      ? "text-black"
+                      : "text-white"
+                  }`}
+                >
+                  {hour} hours
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Current Sleep Type Section */}
+          <Text className="text-secondary text-m font-semibold  tracking-wider mb-4 uppercase">
+            What type of sleep do you typically experience?
+          </Text>
+          <View className="flex flex-wrap flex-row justify-between mb-6">
+            {["Light", "Deep", "Interrupted", "Restless"].map((type) => (
+              <TouchableOpacity
+                key={type}
+                className={`p-4 rounded-lg shadow-lg ${
+                  formData.current_sleep_type === type
+                    ? "bg-white"
+                    : "bg-[#292929]"
+                } flex-1 mb-4 mr-4 min-w-[140px]`}
+                onPress={() => handleInputChange("current_sleep_type", type)}
+              >
+                <Text
+                  className={`text-lg ${
+                    formData.current_sleep_type === type
+                      ? "text-black"
+                      : "text-white"
+                  }`}
+                >
+                  {type}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Sleep Goal Section */}
+          <Text className="text-secondary text-m font-semibold  tracking-wider mb-4 uppercase">
+            What is your main sleep goal or improvement you'd like to achieve?
+          </Text>
+          <View className="flex flex-wrap flex-row justify-between mb-6">
+            {[
+              "Better quality of sleep",
+              "Increase sleep duration",
+              "Consistency in sleep schedule",
+            ].map((goal) => (
+              <TouchableOpacity
+                key={goal}
+                className={`p-4 rounded-lg shadow-lg ${
+                  formData.sleep_goal === goal ? "bg-white" : "bg-[#292929]"
+                } flex-1 mb-4 mr-4 min-w-[180px]`}
+                onPress={() => handleInputChange("sleep_goal", goal)}
+              >
+                <Text
+                  className={`text-lg ${
+                    formData.sleep_goal === goal ? "text-black" : "text-white"
+                  }`}
+                >
+                  {goal}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Diet Section */}
+          <Text className="text-secondary text-m font-semibold  tracking-wider mb-4 uppercase">
+            What type of diet do you follow currently?
+          </Text>
+          <View className="flex flex-wrap flex-row justify-between mb-6">
+            {["Veg", "Non-Veg", "Vegan", "Other"].map((diet) => (
+              <TouchableOpacity
+                key={diet}
+                className={`p-4 rounded-lg shadow-lg ${
+                  formData.diet === diet ? "bg-white" : "bg-[#292929]"
+                } flex-1 mb-4 mr-4 min-w-[120px]`}
+                onPress={() => handleInputChange("diet", diet)}
+              >
+                <Text
+                  className={`text-lg ${
+                    formData.diet === diet ? "text-black" : "text-white"
+                  }`}
+                >
+                  {diet}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Sleep Time Section */}
+          <Text className="text-secondary text-m font-semibold tracking-wider mb-4 uppercase">
+            What time do you usually go to bed each night?
+          </Text>
+          <View className="flex flex-wrap flex-row justify-between mb-6">
+            {[
+              "Before 9:00 PM",
+              "9:00 PM - 11:00 PM",
+              "11:00 PM - 1:00 AM",
+              "After 1:00 AM",
+            ].map((time) => (
+              <TouchableOpacity
+                key={time}
+                className={`p-4 rounded-lg shadow-lg ${
+                  formData.sleep_time === time ? "bg-white" : "bg-[#292929]"
+                } flex-1 mb-4 mr-4 min-w-[140px]`}
+                onPress={() => handleInputChange("sleep_time", time)}
+              >
+                <Text
+                  className={`text-lg ${
+                    formData.sleep_time === time ? "text-black" : "text-white"
+                  }`}
+                >
+                  {time}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Submit Button */}
           <TouchableOpacity
             className={`bg-primary py-3 rounded-md mt-6 ${
               loading ? "opacity-50" : ""
@@ -138,13 +228,13 @@ const AgentDetailsScreen = () => {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text className="text-white text-center text-lg font-semibold">
+              <Text className="text-white text-center text-lg font-semibold uppercase">
                 Submit
               </Text>
             )}
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 };

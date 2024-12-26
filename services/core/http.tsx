@@ -1,14 +1,16 @@
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import Storage from "../utilities/storage";
+import { router } from "expo-router";
 
 const TIMEOUT = 3600000;
 const CONTENT_TYPE_JSON = "application/json";
-const UNKNOWN_ERR_MSG =
-  "An unknown server error has occurred or the server may be unreachable.";
-const REFRESH_TOKEN_URL = `${process.env.EXPO_PUBLIC_REACT_NATIVE_APP_API_BASE_URL}/auth/refresh`;
+const REFRESH_TOKEN_URL = `${process.env.EXPO_PUBLIC_REACT_NATIVE_APP_API_BASE_URL}auth/refresh`;
 
-axios.defaults.headers.post["Content-Type"] = CONTENT_TYPE_JSON;
-axios.defaults.timeout = TIMEOUT;
+const api = axios.create({
+  baseURL: process.env.EXPO_PUBLIC_REACT_NATIVE_APP_API_BASE_URL,
+  timeout: TIMEOUT,
+  headers: { "Content-Type": CONTENT_TYPE_JSON },
+});
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
@@ -22,18 +24,28 @@ const addRefreshSubscriber = (callback: (token: string) => void) => {
   refreshSubscribers.push(callback);
 };
 
-axios.interceptors.request.use(
+const handleTokenRefreshError = async () => {
+  console.error("Refresh token expired or invalid. Logging out...");
+  await Storage.clear();
+  router.push("/screens/welcome"); // Navigate to the login screen
+};
+
+// Attach request interceptor
+api.interceptors.request.use(
   async (config: any) => {
-    const token = await Storage.getAuthToken();
-    if (token) {
-      config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
+    if (!config.headers.Authorization) {
+      const token = await Storage.getAuthToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-axios.interceptors.response.use(
+// Attach response interceptor
+api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest: any = error.config;
@@ -43,7 +55,7 @@ axios.interceptors.response.use(
         return new Promise((resolve) => {
           addRefreshSubscriber((token) => {
             originalRequest.headers.Authorization = `Bearer ${token}`;
-            resolve(axios(originalRequest));
+            resolve(api(originalRequest));
           });
         });
       }
@@ -55,7 +67,7 @@ axios.interceptors.response.use(
         const refreshToken = await Storage.getRefreshToken();
         if (!refreshToken) throw new Error("Refresh token missing");
 
-        const response = await axios.post(REFRESH_TOKEN_URL, { refreshToken });
+        const response = await api.post(REFRESH_TOKEN_URL, { refreshToken });
         const { accessToken, refreshToken: newRefreshToken } = response.data;
 
         if (!accessToken || !newRefreshToken) {
@@ -71,11 +83,10 @@ axios.interceptors.response.use(
         onTokenRefreshed(accessToken);
 
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return axios(originalRequest);
+        return api(originalRequest);
       } catch (refreshError) {
         isRefreshing = false;
-        await Storage.clear();
-        window.location.href = "screens/login";
+        await handleTokenRefreshError();
         return Promise.reject(refreshError);
       }
     }
@@ -108,7 +119,7 @@ class Http {
     }
 
     try {
-      const response: AxiosResponse<T> = await axios(axiosConfig);
+      const response: AxiosResponse<T> = await api(axiosConfig);
       return response.data;
     } catch (error: unknown) {
       return this.handleError<T>(error);
@@ -137,15 +148,15 @@ class Http {
       throw {
         status,
         data: responseData,
-        error: responseData?.message || UNKNOWN_ERR_MSG,
+        error: responseData?.message || "An unknown error occurred.",
       };
     }
     if ((error as AxiosError).request) {
       throw {
-        error: (error as AxiosError).message || UNKNOWN_ERR_MSG,
+        error: (error as AxiosError).message || "Server unreachable.",
       };
     }
-    throw { error: UNKNOWN_ERR_MSG };
+    throw { error: "An unknown error occurred." };
   }
 
   get<T>(params: Omit<AxiosRequestConfig, "method">): Promise<T> {

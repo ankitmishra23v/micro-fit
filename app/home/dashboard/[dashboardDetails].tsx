@@ -98,7 +98,7 @@ const DashboardDetails = () => {
     <SafeAreaView className="h-full bg-black px-[4%] pt-[4%]">
       <TouchableOpacity
         onPress={() => router.back()}
-        className="max-w-8 mb-12 pl-1"
+        className="max-w-8 mb-12 pl-1 mt-[2%]"
       >
         <Ionicons name="chevron-back-sharp" size={24} color="white" />
       </TouchableOpacity>

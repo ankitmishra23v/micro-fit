@@ -14,7 +14,6 @@ import { useRouter } from "expo-router";
 import Header from "@/components/Header";
 import googleLogo from "@/assets/images/google.png";
 
-// Ensure that WebBrowser completes the auth session
 WebBrowser.maybeCompleteAuthSession();
 
 const WelcomeScreen = () => {
@@ -27,7 +26,6 @@ const WelcomeScreen = () => {
     scopes: ["profile", "email"],
   });
 
-  console.log("Redirect URI:", request?.redirectUri);
   useEffect(() => {
     const backAction = () => {
       BackHandler.exitApp();
@@ -43,15 +41,11 @@ const WelcomeScreen = () => {
   }, []);
 
   useEffect(() => {
-    console.log("RESPONSSEEEEEE", response);
     if (response?.type === "success" && response?.params?.code) {
-      const authCode = response.params.code; // Extract the authorization code
+      const authCode = response.params.code;
       console.log("Authorization Code:", authCode);
 
-      // Show a success message
       Alert.alert("Success", `Authorization Code: ${authCode}`);
-
-      // TODO: Send the code to your backend
     } else if (response?.type === "error") {
       console.log("Error during authentication:", response.error);
       Alert.alert("Error", "Google authentication failed.");
@@ -63,14 +57,11 @@ const WelcomeScreen = () => {
 
     console.log("RESUltttt", result);
     if (result.type === "success") {
-      const { params } = result; // Access params directly from the JSON response
-      // console.log("Full Response JSON:", JSON.stringify(result, null, 2));
+      const { params } = result;
       console.log("Authorization Code:", params.code);
-      // router.push("/screens/login");
-      // Show the extracted authorization code
+
       Alert.alert("Success", `Authorization Code: ${params.code}`);
     } else if (result.type === "error") {
-      // console.log("Authentication Error:", result.error);
       Alert.alert("Error", "Google authentication failed.");
     }
   };
