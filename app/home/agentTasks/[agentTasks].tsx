@@ -13,12 +13,14 @@ import { Ionicons } from "@expo/vector-icons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Checkbox from "expo-checkbox";
 import { getFormattedUTCDate } from "@/components/constant";
+import { toast } from "@/components/ToastManager";
 
 const AgentTasksScreen = () => {
   const { agentTasks: instanceId } = useLocalSearchParams();
   const router = useRouter();
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [agentName, setAgentName] = useState<string>("");
   const [error, setError] = useState<boolean>(false);
   const [selectedTab, setSelectedTab] = useState<"today" | "yesterday">(
     "today"
@@ -44,16 +46,20 @@ const AgentTasksScreen = () => {
           params: { date: dateParam },
         });
 
+        const Name = response.data
+          ?.flatMap((item: any) => item.agentData?.agentContextName)
+          .join(", ");
+
+        setAgentName(Name);
+
         const taskDetails = response.data?.flatMap(
           (item: any) => item.agentData?.taskDetails || []
         );
 
-        // Filter out tasks with empty subdata
         const filteredTasks = taskDetails.filter(
           (task: any) => task.subdata?.length > 0
         );
 
-        // Prepare initial checkedTasks based on subdata
         const initialCheckedState: { [key: string]: boolean } = {};
         filteredTasks.forEach((task: any) => {
           const firstSubdata = task.subdata?.[0];
@@ -63,7 +69,8 @@ const AgentTasksScreen = () => {
         setCheckedTasks(initialCheckedState);
         setInstanceName(response?.data[0]?.agentData?.name);
         setTasks(filteredTasks || []);
-      } catch (error) {
+      } catch (error: any) {
+        toast.error({ title: error.error });
         console.error("Error fetching instance details:", error);
         setError(true);
       } finally {
@@ -106,14 +113,21 @@ const AgentTasksScreen = () => {
                   : null
                 : null;
 
+              const dateParam =
+                selectedTab === "today"
+                  ? getFormattedUTCDate(0)
+                  : getFormattedUTCDate(-1);
+
               router.push({
                 pathname: "/home/agentTasks/taskDetails/[taskDetails]",
                 params: {
-                  taskDetails: item.name,
+                  taskDetails: item.taskContextName,
                   instanceId,
-                  taskId, // Parent task ID
-                  subdataFirstId, // First element ID of subdata
-                  action, // String "true" or "false" if action exists
+                  taskId,
+                  subdataFirstId,
+                  action,
+                  date: dateParam,
+                  agentName,
                 },
               });
             }}
@@ -153,22 +167,22 @@ const AgentTasksScreen = () => {
         </Text>
         <Ionicons name="ellipsis-vertical" size={24} color="white" />
       </View>
-      {!error && (
-        <View className="px-[4%] pt-4 ">
-          <Text className="text-secondary text-sm uppercase tracking-wider mb-2">
-            Goal Progress
-          </Text>
-          <View className="bg-primary rounded-lg p-4">
-            <View className="w-full bg-black h-4 rounded-full overflow-hidden">
-              <View className="bg-white h-full" style={{ width: "45%" }}></View>
-            </View>
-            <Text className="text-white text-sm mt-2">45%</Text>
-            <Text className="text-secondary text-xs mt-1 uppercase tracking-wider">
-              9 Days to Go
-            </Text>
+      {/* {!error && ( */}
+      <View className="px-[4%] pt-4 ">
+        <Text className="text-secondary text-sm uppercase tracking-wider mb-2">
+          Goal Progress
+        </Text>
+        <View className="bg-primary rounded-lg p-4">
+          <View className="w-full bg-black h-4 rounded-full overflow-hidden">
+            <View className="bg-white h-full" style={{ width: "45%" }}></View>
           </View>
+          <Text className="text-white text-sm mt-2">45%</Text>
+          <Text className="text-secondary text-xs mt-1 uppercase tracking-wider">
+            9 Days to Go
+          </Text>
         </View>
-      )}
+      </View>
+      {/* )} */}
 
       {/* Tabs */}
       <View className="mx-[4%] flex-row justify-between mt-[2%] bg-[#101010] rounded-lg px-3 py-1.5">

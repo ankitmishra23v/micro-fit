@@ -21,6 +21,7 @@
       }
     },
     "android": {
+      "googleServicesFile": "./GoogleService-Info.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/MICRO.FIT.png",
         "backgroundColor": "#ffffff"

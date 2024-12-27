@@ -8,6 +8,7 @@ import {
   TextInput,
   Modal,
   Alert,
+  ScrollView,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { toast } from "@/components/ToastManager";
@@ -21,12 +22,21 @@ import {
 import { useAuth } from "@/auth/useAuth";
 
 const TaskDetails = () => {
-  const { taskDetails, instanceId, taskId, subdataFirstId, action } =
-    useLocalSearchParams();
+  const {
+    taskDetails,
+    instanceId,
+    taskId,
+    subdataFirstId,
+    action,
+    date,
+    agentName,
+  } = useLocalSearchParams();
+  console.log(agentName);
   const router = useRouter();
   const { id } = useAuth();
   const taskName = taskDetails as string;
   const instance = instanceId as string;
+  const selectedDate = date as string;
 
   const [taskData, setTaskData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -39,9 +49,16 @@ const TaskDetails = () => {
     const fetchTaskData = async () => {
       try {
         setLoading(true);
-        const response: any = await getDataByTask(instance, taskName);
+        const params = selectedDate ? { date: selectedDate } : {};
+        const response: any = await getDataByTask({
+          instanceId: instance,
+          task: taskName,
+          params,
+        });
         if (response?.data && response.data.length > 0) {
-          setTaskData(response.data[0]);
+          setTaskData(response.data);
+        } else {
+          setTaskData([]);
         }
       } catch (error) {
         console.error("Error fetching task data:", error);
@@ -53,47 +70,77 @@ const TaskDetails = () => {
     if (instance && taskName) {
       fetchTaskData();
     }
-  }, [instance, taskName]);
+  }, [instance, taskName, selectedDate]);
 
   const handleUserInputSubmit = async () => {
     if (userInput.trim() === "") {
       Alert.alert("Input Required", "Please feed in your issue.");
       return;
     }
+
     setIsLoading(true);
+
     try {
-      const userId: any = id;
-      const feedbackData = {
-        instanceId: instanceId,
-        feedbackId: "",
-        taskKey: taskName,
-        agentKey: "better-sleep",
-        isSubmitted: true,
-        questionAnswer: [
-          {
-            question: "What difficulty you are facing in this task?",
-            answer: userInput,
-          },
-        ],
-        feedbackBy: "USER_TASK",
-      };
+      if (taskName === "better-sleep") {
+        // Logic for "better-sleep"
+        const userId: any = id;
+        const feedbackData = {
+          instanceId: instanceId,
+          feedbackId: "",
+          taskKey: taskName,
+          agentKey: taskName,
+          isSubmitted: true,
+          questionAnswer: [
+            {
+              question: "What difficulty you are facing in this task?",
+              answer: userInput,
+            },
+          ],
+          feedbackBy: "USER_TASK",
+        };
 
-      const response: any = await sendFeedback({
-        data: feedbackData,
-        user_id: userId,
-      });
+        const response: any = await sendFeedback({
+          data: feedbackData,
+          user_id: userId,
+        });
 
-      toast.success({
-        title:
-          "Thank you for your feedback. Our AI will generate a new version of this task tailored to your needs shortly.",
-      });
+        toast.success({
+          title:
+            "Thank you for your feedback. Our AI will generate a new version of this task tailored to your needs shortly.",
+        });
 
-      setUserInput("");
-      setIsModalVisible(false);
-    } catch (error) {
-      console.error("Error submitting feedback:", error);
+        setUserInput("");
+        setIsModalVisible(false);
+      } else {
+        const currentTime = new Date()
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ");
+        const payload = {
+          taskId: taskId,
+          taskDataID: subdataFirstId,
+          message: userInput,
+          current_time: currentTime,
+        };
+
+        const response: any = await completeTask({
+          data: payload,
+          instace_id: instance,
+        });
+
+        toast.success({
+          title: response?.data?.message || "Task marked as completed!",
+        });
+
+        setUserInput("");
+        setIsModalVisible(false);
+        router.back();
+      }
+    } catch (error: any) {
       toast.error({
-        title: "Failed to submit your feedback. Please try again later.",
+        title:
+          error?.data?.message ||
+          "Failed to submit your feedback. Please try again later.",
       });
       setIsModalVisible(false);
     } finally {
@@ -108,7 +155,6 @@ const TaskDetails = () => {
       [
         {
           text: "No",
-          onPress: () => {},
           style: "cancel",
         },
         {
@@ -116,22 +162,33 @@ const TaskDetails = () => {
           onPress: async () => {
             try {
               setIsCompleteLoading(true);
+
+              const currentTime = new Date()
+                .toISOString()
+                .slice(0, 19)
+                .replace("T", " ");
               const payload = {
                 taskId: taskId,
                 taskDataID: subdataFirstId,
-                message: "",
+                message: "completed",
+                current_time:
+                  agentName !== "better-sleep" ? currentTime : undefined, // Include current_time only if agentName is not "better-sleep"
               };
+
               const response: any = await completeTask({
                 data: payload,
                 instace_id: instance,
               });
+
               toast.success({
-                title: response?.data?.message,
+                title: response?.data?.message || "Task marked as completed!",
               });
               router.back();
             } catch (error: any) {
               toast.error({
-                title: error?.data?.message,
+                title:
+                  error?.data?.message ||
+                  "Failed to mark the task as completed. Please try again later.",
               });
             } finally {
               setIsCompleteLoading(false);
@@ -143,6 +200,10 @@ const TaskDetails = () => {
     );
   };
 
+  const formatDate = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString();
+  };
+
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-black">
@@ -152,8 +213,7 @@ const TaskDetails = () => {
   }
 
   return (
-    <SafeAreaView className="bg-black flex-1 relative">
-      <View className="absolute top-0 z-50 w-full"></View>
+    <SafeAreaView className="bg-black flex-1">
       <View className="flex-row justify-between items-center px-4 py-4">
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color="white" />
@@ -165,24 +225,35 @@ const TaskDetails = () => {
           <FontAwesome6 name="clock" size={20} color="white" />
         </TouchableOpacity>
       </View>
-      <View className="px-4 flex-1">
-        <View className="flex-1 mb-6 py-4">
-          {taskData ? (
-            <View className="bg-primary p-4 rounded-lg">
-              <Text className="text-white text-base">
-                {taskData.jsonData?.text ||
-                  taskData.jsonData?.task ||
+      <ScrollView
+        className="px-4 flex-1"
+        contentContainerStyle={{ paddingBottom: 80 }}
+      >
+        {taskData && taskData.length > 0 ? (
+          taskData.map((task: any, index: number) => (
+            <View key={index} className="bg-primary p-4 rounded-lg mb-4">
+              <View className="absolute top-0 right-0 px-2 py-1 rounded-lg">
+                <Text className="text-white text-xs">
+                  {formatDate(task?.createdAt)}
+                </Text>
+              </View>
+              <Text className="text-white text-base mt-4">
+                {task.jsonData[0]?.text ||
+                  task.jsonData?.text ||
+                  task.jsonData?.task ||
                   "No text available"}
               </Text>
             </View>
-          ) : (
-            <Text className="text-white text-base">No data available</Text>
-          )}
-        </View>
+          ))
+        ) : (
+          <Text className="text-white text-base">No data available</Text>
+        )}
+      </ScrollView>
+      <View className="px-4 pb-4">
         <TouchableOpacity
           className={`${
-            action === "true" ? "bg-gray-800" : "bg-primary"
-          } py-4 rounded-lg mb-4 ${taskData ? "block" : "hidden"}`}
+            action === "true" ? "bg-gray-800" : "bg-secondary"
+          } py-4 rounded-lg mb-4`}
           onPress={handleCompleteTask}
           disabled={isCompleteLoading || action === "true"}
         >
@@ -193,14 +264,13 @@ const TaskDetails = () => {
               Completed
             </Text>
           ) : (
-            <Text className="text-secondary text-center tracking-wider font-bold uppercase">
+            <Text className="text-black text-center tracking-wider font-bold uppercase">
               Complete
             </Text>
           )}
         </TouchableOpacity>
-
         <TouchableOpacity
-          className="bg-primary py-4 rounded-lg mb-16"
+          className="bg-primary py-4 rounded-lg"
           onPress={() => setIsModalVisible(true)}
         >
           <Text className="text-secondary text-center tracking-wider font-bold uppercase">
@@ -215,7 +285,7 @@ const TaskDetails = () => {
         onRequestClose={() => setIsModalVisible(false)}
       >
         <View className="flex-1 justify-center items-center bg-primary opacity-95">
-          <View className="bg-primary w-11/12 rounded-lg p-6 relative">
+          <View className="bg-primary w-11/12 rounded-lg p-6">
             <Text className="text-white text-lg font-semibold mb-4 text-center">
               What’s the issue?
             </Text>
@@ -230,20 +300,14 @@ const TaskDetails = () => {
             />
             <View className="flex-row justify-between mt-6">
               <TouchableOpacity
-                className={`bg-gray-500 py-3 rounded-lg flex-1 mr-2 ${
-                  isLoading ? "opacity-50" : ""
-                }`}
+                className="bg-gray-500 py-3 rounded-lg flex-1 mr-2"
                 onPress={() => setIsModalVisible(false)}
-                disabled={isLoading}
               >
                 <Text className="text-white text-center font-bold">Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className={`bg-blue-500 py-3 rounded-lg flex-1 ml-2 ${
-                  isLoading ? "opacity-50" : ""
-                }`}
+                className="bg-blue-500 py-3 rounded-lg flex-1 ml-2"
                 onPress={handleUserInputSubmit}
-                disabled={isLoading}
               >
                 {isLoading ? (
                   <ActivityIndicator size="small" color="#fff" />

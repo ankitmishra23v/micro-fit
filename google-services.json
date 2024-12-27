@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "359653494588",
+    "project_id": "microfitdev",
+    "storage_bucket": "microfitdev.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:359653494588:android:f3b8166c3b9fd16de55839",
+        "android_client_info": {
+          "package_name": "com.anonymous.microfit"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_Hytqy1HHT6pOkR0DNiJutLyUkyG8EMc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

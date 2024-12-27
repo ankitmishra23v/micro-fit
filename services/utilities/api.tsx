@@ -43,13 +43,26 @@ export const getAllAgents = ({ params }: { params?: any } = {}) => {
 
 export const createAgentInstance = ({
   data,
-  userId,
+  agentId,
 }: {
   data: Record<string, any>;
-  userId: string;
+  agentId: string;
 }) => {
   return http.post({
-    url: makeApiUrl(`user/agent/${userId}/instance`),
+    url: makeApiUrl(`user/agent/${agentId}/instance`),
+    data,
+  });
+};
+
+export const createAgentInstance1 = ({
+  data,
+  agentId,
+}: {
+  data: Record<string, any>;
+  agentId: string;
+}) => {
+  return http.post({
+    url: makeApiUrl(`user/agent/${agentId}/instance1`),
     data,
   });
 };
@@ -86,9 +99,18 @@ export const getAgentInstanceById = ({
   });
 };
 
-export const getDataByTask = (instanceId: string, task: string) => {
+export const getDataByTask = ({
+  instanceId,
+  task,
+  params,
+}: {
+  instanceId: string;
+  task: string;
+  params?: Record<string, any>;
+}) => {
   return http.get({
     url: makeApiUrl(`instances/${instanceId}/task/${task}/data`),
+    params,
   });
 };
 
@@ -153,6 +175,32 @@ export const submitScalFeedback = ({
 }) => {
   return http.put({
     url: makeApiUrl(`feedback/${feedback_id}`),
+    data,
+  });
+};
+
+export const getOnboardingQuestions = ({
+  user_id,
+  params,
+}: {
+  user_id: string;
+  params: any;
+}) => {
+  return http.get({
+    url: makeApiUrl(`user/${user_id}/onboardings`),
+    params,
+  });
+};
+
+export const submitOnboardingQuestions = ({
+  id,
+  data,
+}: {
+  id: string;
+  data: Record<string, any>;
+}) => {
+  return http.put({
+    url: makeApiUrl(`user/onboarding/${id}`),
     data,
   });
 };

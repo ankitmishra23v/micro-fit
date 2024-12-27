@@ -4,9 +4,13 @@ import {
   Text,
   ActivityIndicator,
   SafeAreaView,
-  FlatList,
+  ScrollView,
   TextInput,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -86,7 +90,7 @@ const TaskFeedback = () => {
       });
 
       toast.success({
-        title: "Yay ! Your feedback has been submitted successfully",
+        title: "Yay! Your feedback has been submitted successfully",
       });
       console.log("Feedback submitted successfully!", response.data);
       router.back();
@@ -97,61 +101,113 @@ const TaskFeedback = () => {
     }
   };
 
-  const renderQuestion = ({ item }: { item: any }) => (
-    <View className="bg-primary p-4 rounded-lg mb-4">
-      <Text className="text-white text-lg mb-2">{item.question}</Text>
-      <TextInput
-        className="bg-black text-white p-2 rounded-lg"
-        placeholder="Type your answer here"
-        placeholderTextColor="#888"
-        value={answers[item.id] || ""}
-        onChangeText={(text) => handleAnswerChange(item.id, text)}
-      />
-    </View>
-  );
-
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <View className="bg-black flex-1 px-4 pt-[2%]">
-        <TouchableOpacity onPress={() => router.back()} className="mt-4">
-          <Ionicons name="chevron-back" size={28} color="white" />
-        </TouchableOpacity>
-        <Text className="text-secondary text-xl font-bold mb-4 mt-8">
-          Please give your valuable feedback for task{" "}
-          <Text className="text-orange-500 uppercase tracking-wider text-center">
-            {taskName}
-          </Text>
-        </Text>
-        <View style={{ flex: 1, marginBottom: 24 }}>
-          {loading ? (
-            <ActivityIndicator size="large" color="#FFFFFF" />
-          ) : questions.length > 0 ? (
-            <>
-              <FlatList
-                data={questions}
-                keyExtractor={(item) => item.id}
-                renderItem={renderQuestion}
-                contentContainerStyle={{ paddingBottom: 16 }}
-                style={{ flex: 1 }}
-                showsVerticalScrollIndicator={false}
-              />
-              <TouchableOpacity
-                className={`py-3 px-4 rounded-lg mt-4 ${
-                  submitting ? "bg-gray-500" : "bg-blue-500 "
-                }`}
-                onPress={handleSubmitAnswers}
-                disabled={submitting}
-              >
-                <Text className="text-white text-center font-bold  tracking-wider uppercase">
-                  {submitting ? "Submitting..." : "Submit Feedback"}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={{ flex: 1, backgroundColor: "black" }}>
+            {/* Back button and heading */}
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ marginTop: 16, padding: 8 }}
+            >
+              <Ionicons name="chevron-back" size={28} color="white" />
+            </TouchableOpacity>
+            <Text className="text-secondary text-xl font-bold mt-8 px-4">
+              Please give your valuable feedback for task{" "}
+              <Text className="text-orange-500 uppercase tracking-wider text-center">
+                {taskName}
+              </Text>
+            </Text>
+
+            {/* Scrollable questions */}
+            <ScrollView
+              contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+              showsVerticalScrollIndicator={false}
+              style={{ flex: 1 }}
+            >
+              {loading ? (
+                <ActivityIndicator size="large" color="#FFFFFF" />
+              ) : questions.length > 0 ? (
+                questions.map((item) => (
+                  <View
+                    key={item.id}
+                    style={{
+                      backgroundColor: "#1c1c1c",
+                      padding: 16,
+                      borderRadius: 8,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "white",
+                        fontSize: 16,
+                        marginBottom: 8,
+                      }}
+                    >
+                      {item.question}
+                    </Text>
+                    <TextInput
+                      style={{
+                        backgroundColor: "black",
+                        color: "white",
+                        padding: 8,
+                        borderRadius: 8,
+                        height: 40,
+                      }}
+                      placeholder="Type your answer here"
+                      placeholderTextColor="#888"
+                      value={answers[item.id] || ""}
+                      onChangeText={(text) => handleAnswerChange(item.id, text)}
+                    />
+                  </View>
+                ))
+              ) : (
+                <Text style={{ color: "white", fontSize: 16 }}>
+                  No questions available.
                 </Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <Text className="text-white text-md">No questions available.</Text>
-          )}
-        </View>
-      </View>
+              )}
+            </ScrollView>
+            {questions.length > 0 && (
+              <View
+                style={{
+                  position: "absolute",
+                  bottom: 12,
+                  width: "100%",
+                  backgroundColor: "black",
+                  padding: 16,
+                }}
+              >
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: submitting ? "#555" : "#007bff",
+                    paddingVertical: 12,
+                    borderRadius: 8,
+                  }}
+                  onPress={handleSubmitAnswers}
+                  disabled={submitting}
+                >
+                  <Text
+                    style={{
+                      color: "white",
+                      textAlign: "center",
+                      fontWeight: "bold",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {submitting ? "Submitting..." : "Submit Feedback"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

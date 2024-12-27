@@ -13,13 +13,12 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";
-
 import Ionicons from "@expo/vector-icons/Ionicons";
 import profileImage from "@/assets/images/user.png";
 import runImage from "@/assets/images/person-running.png";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/auth/useAuth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNotification } from "@/notification/notificationContext"; // Import notification context
 import {
   getAgentInstances,
   deleteAgentInstance,
@@ -27,15 +26,16 @@ import {
 import { toast } from "@/components/ToastManager";
 
 const HomeScreen = () => {
-  const [userName, setUserName] = useState<string>("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [agentInstances, setAgentInstances] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dropdownVisible, setDropdownVisible] = useState<string | null>(null);
-  const { id, logout } = useAuth();
+  const { id, logout, firstName, lastName } = useAuth();
   const router = useRouter();
   const userId = id as string;
   const screenHeight = Dimensions.get("window").height;
+
+  const { notificationCount } = useNotification();
 
   useEffect(() => {
     const backAction = () => {
@@ -55,21 +55,6 @@ const HomeScreen = () => {
 
     return () => backHandler.remove();
   }, [drawerOpen]);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userDataString = await AsyncStorage.getItem("__user_data");
-        if (userDataString) {
-          const userData = JSON.parse(userDataString);
-          setUserName(userData.firstName || "User");
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    fetchUserData();
-  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -132,11 +117,12 @@ const HomeScreen = () => {
             resizeMode="contain"
           />
         </View>
-        <View>
+        <View className="flex-1">
           <Text className="text-white text-xl font-bold uppercase">
             {item?.agentData?.name}
           </Text>
-          <Text className="text-secondary text-md">
+          {/* Wrap description and ensure it stays inside the card */}
+          <Text className="text-secondary text-md flex-wrap w-full">
             {item?.agentData?.description}
           </Text>
         </View>
@@ -201,7 +187,7 @@ const HomeScreen = () => {
                   />
                 </View>
                 <Text className="text-white text-xl font-bold uppercase">
-                  {userName}
+                  {firstName} {lastName}
                 </Text>
               </View>
               <View className="flex flex-col gap-4">
@@ -237,15 +223,42 @@ const HomeScreen = () => {
             <View>
               <View className="flex-row justify-between items-center">
                 <Text className="text-white text-2xl font-bold">
-                  Welcome, {userName}
+                  Welcome, {firstName}
                 </Text>
                 <View className="flex flex-row justify-between gap-2">
-                  <TouchableOpacity onPress={() => {}}>
+                  <TouchableOpacity
+                    onPress={() => router.push("/home/notifications")}
+                  >
                     <Ionicons
                       name="notifications-circle-outline"
                       size={40}
                       color="#CDCDCD"
                     />
+                    {notificationCount > 0 && (
+                      <View
+                        style={{
+                          position: "absolute",
+                          top: -5,
+                          right: -5,
+                          backgroundColor: "red",
+                          width: 20,
+                          height: 20,
+                          borderRadius: 10,
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "white",
+                            fontSize: 12,
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {notificationCount}
+                        </Text>
+                      </View>
+                    )}
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => setDrawerOpen(true)}>
                     <View className="w-12 h-12 border-4 border-primary rounded-full overflow-hidden">
@@ -276,6 +289,7 @@ const HomeScreen = () => {
                 </View>
               </View>
             </View>
+
             <View className="mt-8">
               <Text className="text-secondary mb-[4%] text-sm uppercase tracking-wider">
                 Your Goals

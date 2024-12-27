@@ -41,7 +41,6 @@ const OnboardingScreen = () => {
         setHasMore(false);
       }
     } catch (error) {
-      console.error("Error fetching agents:", error);
       toast.error({ title: "Failed to fetch agents" });
     } finally {
       if (isInitialFetch) {
@@ -63,18 +62,25 @@ const OnboardingScreen = () => {
     fetchOptions(nextPage, false);
   };
 
-  const handleAgentPress = (agentId: string) => {
-    router.push({
-      pathname: "/screens/onboarding/[agentInstance]",
-      params: { agentInstance: agentId },
-    });
+  const handleAgentPress = (agentId: string, agentName: string) => {
+    if (agentName === "Better sleep") {
+      router.push({
+        pathname: "/screens/onboarding/[agentInstance]",
+        params: { agentInstance: agentId },
+      });
+    } else if (agentName === "Neo Beta v1") {
+      router.push({
+        pathname: "/screens/onboarding/agentInstance1/[agentInstanceNeoBeta]",
+        params: { agentInstanceNeoBeta: agentId },
+      });
+    }
   };
 
   const renderOption = ({ item }: { item: any }) => (
     <TouchableOpacity
       className="bg-primary rounded-xl flex justify-center px-2 m-2 overflow-hidden"
       style={{ width: "45%", aspectRatio: 0.85 }}
-      onPress={() => handleAgentPress(item._id)}
+      onPress={() => handleAgentPress(item._id, item.name)}
     >
       <View className="h-[45%]">
         <Text className="text-[1.5rem] pl-2 font-bold text-white mt-2 uppercase">
@@ -100,7 +106,7 @@ const OnboardingScreen = () => {
         />
       );
     }
-    if (hasMore) {
+    if (hasMore && !loading) {
       return (
         <TouchableOpacity
           className="bg-secondary rounded-lg py-2 px-4 mx-auto mb-4 mt-4 w-[40%]"
