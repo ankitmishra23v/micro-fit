@@ -9,6 +9,10 @@ import {
   Modal,
   Alert,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { toast } from "@/components/ToastManager";
@@ -24,6 +28,7 @@ import { useAuth } from "@/auth/useAuth";
 const TaskDetails = () => {
   const {
     taskDetails,
+    name,
     instanceId,
     taskId,
     subdataFirstId,
@@ -31,7 +36,6 @@ const TaskDetails = () => {
     date,
     agentName,
   } = useLocalSearchParams();
-  console.log(agentName);
   const router = useRouter();
   const { id } = useAuth();
   const taskName = taskDetails as string;
@@ -128,6 +132,8 @@ const TaskDetails = () => {
           instace_id: instance,
         });
 
+        console.log("NEO response: ", response);
+
         toast.success({
           title: response?.data?.message || "Task marked as completed!",
         });
@@ -172,7 +178,7 @@ const TaskDetails = () => {
                 taskDataID: subdataFirstId,
                 message: "completed",
                 current_time:
-                  agentName !== "better-sleep" ? currentTime : undefined, // Include current_time only if agentName is not "better-sleep"
+                  agentName !== "better-sleep" ? currentTime : undefined,
               };
 
               const response: any = await completeTask({
@@ -219,7 +225,7 @@ const TaskDetails = () => {
           <Ionicons name="chevron-back" size={24} color="white" />
         </TouchableOpacity>
         <Text className="text-secondary text-center tracking-wider text-xl uppercase font-semibold">
-          {taskName}
+          {name}
         </Text>
         <TouchableOpacity>
           <FontAwesome6 name="clock" size={20} color="white" />
@@ -270,8 +276,13 @@ const TaskDetails = () => {
           )}
         </TouchableOpacity>
         <TouchableOpacity
-          className="bg-primary py-4 rounded-lg"
+          className={` py-4 rounded-lg ${
+            agentName !== "better-sleep" && action === "true"
+              ? "bg-gray-800"
+              : "bg-primary"
+          }`}
           onPress={() => setIsModalVisible(true)}
+          disabled={agentName !== "better-sleep" && action === "true"}
         >
           <Text className="text-secondary text-center tracking-wider font-bold uppercase">
             Do you have something to say?
@@ -284,42 +295,51 @@ const TaskDetails = () => {
         visible={isModalVisible}
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <View className="flex-1 justify-center items-center bg-primary opacity-95">
-          <View className="bg-primary w-11/12 rounded-lg p-6">
-            <Text className="text-white text-lg font-semibold mb-4 text-center">
-              What’s the issue?
-            </Text>
-            <TextInput
-              className="h-32 border border-gray-600 rounded-lg p-4 text-white bg-black"
-              placeholder="Enter your input here"
-              placeholderTextColor="#aaa"
-              value={userInput}
-              onChangeText={setUserInput}
-              multiline={true}
-              textAlignVertical="top"
-            />
-            <View className="flex-row justify-between mt-6">
-              <TouchableOpacity
-                className="bg-gray-500 py-3 rounded-lg flex-1 mr-2"
-                onPress={() => setIsModalVisible(false)}
-              >
-                <Text className="text-white text-center font-bold">Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className="bg-blue-500 py-3 rounded-lg flex-1 ml-2"
-                onPress={handleUserInputSubmit}
-              >
-                {isLoading ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text className="text-white text-center font-bold">
-                    Submit
-                  </Text>
-                )}
-              </TouchableOpacity>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={{ flex: 1 }}
+        >
+          <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+            <View className="flex-1 justify-center items-center bg-primary opacity-95">
+              <View className="bg-primary w-11/12 rounded-lg p-6">
+                <Text className="text-white text-lg font-semibold mb-4 text-center">
+                  What’s the issue?
+                </Text>
+                <TextInput
+                  className="h-32 border border-gray-600 rounded-lg p-4 text-white bg-black"
+                  placeholder="Enter your input here"
+                  placeholderTextColor="#aaa"
+                  value={userInput}
+                  onChangeText={setUserInput}
+                  multiline={true}
+                  textAlignVertical="top"
+                />
+                <View className="flex-row justify-between mt-6">
+                  <TouchableOpacity
+                    className="bg-gray-500 py-3 rounded-lg flex-1 mr-2"
+                    onPress={() => setIsModalVisible(false)}
+                  >
+                    <Text className="text-white text-center font-bold">
+                      Cancel
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="bg-blue-500 py-3 rounded-lg flex-1 ml-2"
+                    onPress={handleUserInputSubmit}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Text className="text-white text-center font-bold">
+                        Submit
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-          </View>
-        </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );

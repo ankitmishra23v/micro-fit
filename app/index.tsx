@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, StyleSheet, ActivityIndicator, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/auth/useAuth";
 
@@ -12,13 +12,13 @@ export default function Index() {
     const redirectUser = async () => {
       try {
         if (isAuthenticated()) {
-          router.replace("/home"); // Redirect to home if authenticated
+          router.replace("/home");
         } else {
-          router.replace("/screens/welcome"); // Redirect to welcome if not authenticated
+          router.replace("/screens/welcome");
         }
       } catch (error) {
         console.error("Error determining authentication status:", error);
-        router.replace("/screens/welcome"); // Fallback in case of error
+        router.replace("/screens/welcome");
       }
     };
 
@@ -27,16 +27,17 @@ export default function Index() {
     }
   }, [layoutReady, isAuthenticated]);
 
-  // Simulate layout readiness
   useEffect(() => {
     const timeout = setTimeout(() => setLayoutReady(true), 2500);
-    return () => clearTimeout(timeout); // Cleanup timeout on unmount
+    return () => clearTimeout(timeout);
   }, []);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>MICRO. FIT</Text>
-      <ActivityIndicator size="large" color="#FFFFFF" style={styles.loader} />
+      <Image
+        source={require("@/assets/images/MICRO.FIT.gif")}
+        style={styles.gif}
+      />
     </View>
   );
 }
@@ -48,13 +49,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#000000",
   },
-  title: {
-    color: "#FFFFFF",
-    fontSize: 40,
-    fontWeight: "bold",
-    letterSpacing: 5,
-  },
-  loader: {
-    marginTop: 20,
+  gif: {
+    width: 300,
+    height: 300,
   },
 });

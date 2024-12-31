@@ -32,7 +32,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 }) => {
   const [notificationCount, setNotificationCount] = useState(0);
   const [notifications, setNotifications] = useState<any[]>([]);
-  const processedCollapseKeys = new Set();
 
   const incrementNotificationCount = () => {
     setNotificationCount((prev) => prev + 1);
@@ -46,47 +45,48 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     const title = notification?.notification?.title || "No Title";
     const body = notification?.notification?.body || "No Body";
     const data = notification?.data || {};
-    const collapseKey = notification?.collapseKey || "default-collapse-key";
-    const notificationId = data.notificationId;
-
-    if (processedCollapseKeys.has(collapseKey)) {
-      return;
-    }
-
-    processedCollapseKeys.add(collapseKey);
+    const collapseKey = notification?.collapseKey || null;
+    const notificationId = data.notificationId || Date.now().toString();
+    const sentTime = notification?.sentTime || Date.now();
 
     setNotifications((prev) => {
-      const newNotifications = [
-        ...prev,
-        {
-          notificationId,
-          notification: { title, body },
-          data,
-          collapseKey,
-          read: false,
-        },
-      ];
+      const existingNotification = prev.find(
+        (n) => n.notificationId === notificationId
+      );
 
-      return newNotifications;
+      if (!existingNotification) {
+        if (collapseKey) {
+          incrementNotificationCount();
+        }
+        return [
+          ...prev,
+          {
+            notificationId,
+            notification: { title, body },
+            data,
+            collapseKey,
+            sentTime,
+            read: false,
+          },
+        ];
+      }
+      return prev;
     });
-    incrementNotificationCount();
   };
 
   const markNotificationAsRead = (notificationId: string) => {
-    setNotifications((prev) => {
-      const updatedNotifications = prev.map((notification) => {
+    setNotifications((prev) =>
+      prev.map((notification) => {
         if (
-          notification.data.notificationId === notificationId &&
+          notification.notificationId === notificationId &&
           !notification.read
         ) {
           decrementNotificationCount();
           return { ...notification, read: true };
         }
         return notification;
-      });
-
-      return updatedNotifications;
-    });
+      })
+    );
   };
 
   return (

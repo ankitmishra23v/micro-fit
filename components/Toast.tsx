@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Animated, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Entypo from "@expo/vector-icons/Entypo";
 
 const screenWidth = Dimensions.get("window").width;
@@ -10,25 +18,28 @@ type ToastType = "success" | "error" | "warning";
 interface ToastProps {
   type: ToastType;
   title: string;
+  onClose: () => void; // Close handler for the toast
 }
 
-export const ToastComponent = ({ type, title }: ToastProps) => {
+export const ToastComponent = ({ type, title, onClose }: ToastProps) => {
   const [fadeAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
+    // Fade in animation
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 300,
       useNativeDriver: true,
-    }).start(() => {
-      setTimeout(() => {
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }).start();
-      }, 5000);
-    });
+    }).start();
+
+    return () => {
+      // Clean up fade-out when component unmounts
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    };
   }, [fadeAnim]);
 
   const getBorderBottomStyle = () => {
@@ -49,7 +60,7 @@ export const ToastComponent = ({ type, title }: ToastProps) => {
       case "success":
         return <AntDesign name="checkcircleo" size={24} color="green" />;
       case "error":
-        return <Entypo name="cross" size={24} color="red" />;
+        return <MaterialIcons name="error-outline" size={24} color="red" />;
       case "warning":
         return <AntDesign name="warning" size={24} color="#FFC107" />;
       default:
@@ -77,12 +88,13 @@ export const ToastComponent = ({ type, title }: ToastProps) => {
           },
         ]}
       >
-        <View style={styles.iconContainer}>
-          <Text style={styles.icon}>{getIcon()}</Text>
-        </View>
+        <View style={styles.iconContainer}>{getIcon()}</View>
         <View style={styles.textContainer}>
           <Text style={styles.toastTitle}>{title}</Text>
         </View>
+        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+          <AntDesign name="close" size={20} color="#fff" />
+        </TouchableOpacity>
       </Animated.View>
     </View>
   );
@@ -129,14 +141,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  icon: {
-    fontSize: 12,
-    color: "#fff",
   },
   textContainer: {
     flex: 1,
@@ -145,5 +149,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  closeButton: {
+    marginLeft: 12,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
   },
 });

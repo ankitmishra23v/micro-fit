@@ -71,8 +71,6 @@ const AgentInstance1 = () => {
 
     const payload = formData;
 
-    console.log("PAYLDD", payload);
-
     try {
       setLoading(true);
       const response = await createAgentInstance1({

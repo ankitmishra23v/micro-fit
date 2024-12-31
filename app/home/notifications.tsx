@@ -18,8 +18,7 @@ const NotificationScreen = () => {
     const data = notification?.data || {};
     const { type, taskKey, instanceId } = data;
 
-    // Mark the notification as read when clicked
-    markNotificationAsRead(notification.data.notificationId); // Use data.notificationId
+    markNotificationAsRead(notification.notificationId);
 
     if (type === "APP_CALLBACK_DATA" && instanceId) {
       router.push({
@@ -41,22 +40,35 @@ const NotificationScreen = () => {
     }
   };
 
+  const sortedNotifications = [...notifications].sort(
+    (a, b) => b.sentTime - a.sentTime
+  );
+
   const renderNotification = ({ item }: { item: any }) => {
     const isRead = item.read;
+
+    const formattedTime = new Date(item.sentTime).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    });
 
     return (
       <TouchableOpacity
         className={`bg-[#1f1f1f] rounded-lg p-4 mb-4 flex-row items-center ${
-          isRead ? "opacity-50" : "" // Dim the notification if it is read
+          isRead ? "opacity-60" : "shadow-lg"
         }`}
-        onPress={() => !isRead && handleNotificationNavigation(item)} // Disable if read
-        disabled={isRead} // Disable interaction if already read
+        onPress={() => !isRead && handleNotificationNavigation(item)}
+        disabled={isRead}
       >
-        <View className="mr-3">
+        <View className="mr-4">
           <Ionicons
-            name="notifications-outline"
-            size={28}
-            color="orange"
+            name={isRead ? "notifications" : "notifications-outline"}
+            size={30}
+            color={isRead ? "gray" : "orange"}
             className="rounded-full bg-[#292929] p-2"
           />
         </View>
@@ -64,8 +76,11 @@ const NotificationScreen = () => {
           <Text className="text-white text-lg font-bold mb-1">
             {item.notification?.title || "No Title"}
           </Text>
-          <Text className="text-secondary text-sm">
+          <Text className="text-gray-300 text-l mb-2">
             {item.notification?.body || "No Body"}
+          </Text>
+          <Text className="text-white font-semibold text-sm mt-2">
+            {formattedTime}
           </Text>
         </View>
       </TouchableOpacity>
@@ -81,23 +96,25 @@ const NotificationScreen = () => {
           </TouchableOpacity>
         </View>
         <View className="w-2/3 pl-4">
-          <Text className="text-secondary text-lg font-bold tracking-wide uppercase">
+          <Text className="text-white text-lg font-bold tracking-wide uppercase">
             Notifications
           </Text>
         </View>
       </View>
       <View className="flex-1 px-4 py-2">
-        {notifications.length === 0 ? (
+        {sortedNotifications.length === 0 ? (
           <View className="flex-1 justify-center items-center">
             <Ionicons name="notifications-off" size={64} color="#555555" />
-            <Text className="text-secondary text-lg mt-4">
+            <Text className="text-white text-lg mt-4">
               No notifications yet!
             </Text>
           </View>
         ) : (
           <FlatList
-            data={notifications.reverse()}
-            keyExtractor={(item, index) => index.toString()}
+            data={sortedNotifications}
+            keyExtractor={(item) =>
+              item.notificationId || Date.now().toString()
+            }
             renderItem={renderNotification}
             contentContainerStyle={{ paddingBottom: 16 }}
           />

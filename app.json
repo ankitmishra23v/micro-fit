@@ -21,7 +21,7 @@
       }
     },
     "android": {
-      "googleServicesFile": "./GoogleService-Info.json",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/MICRO.FIT.png",
         "backgroundColor": "#ffffff"
@@ -39,8 +39,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/MICRO.FIT.png",
-          "resizeMode": "contain",
+          "image": "./assets/images/M.png",
+          "resizeMode": "cover",
           "backgroundColor": "#000000"
         }
       ],
