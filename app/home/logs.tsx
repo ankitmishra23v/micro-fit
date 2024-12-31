@@ -79,7 +79,7 @@ const Logs = () => {
       >
         <Ionicons name="chevron-back" size={24} color="white" />
       </TouchableOpacity>
-      <View className=" px-4">
+      <View className="flex-1 px-4">
         <FlatList
           data={notifications}
           keyExtractor={(item) => item._id}
@@ -108,6 +108,7 @@ const Logs = () => {
               </Text>
             )
           }
+          contentContainerStyle={{ paddingBottom: 70 }} // Ensure space for the button
         />
       </View>
     </SafeAreaView>
