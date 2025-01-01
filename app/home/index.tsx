@@ -321,19 +321,20 @@ const HomeScreen = () => {
                 Your Goals
               </Text>
               {loading ? (
-                <FlatList
-                  data={Array(1).fill(null)}
-                  keyExtractor={(_, index) => index.toString()}
-                  renderItem={() => <SkeletonCard />}
-                  contentContainerStyle={{
-                    gap: 8,
-                    paddingBottom: 16,
-                  }}
-                  showsVerticalScrollIndicator={true}
-                  style={{
-                    maxHeight: screenHeight * 0.4,
-                  }}
-                />
+                // <FlatList
+                //   data={Array(0).fill(null)}
+                //   keyExtractor={(_, index) => index.toString()}
+                //   renderItem={() => <SkeletonCard />}
+                //   contentContainerStyle={{
+                //     gap: 8,
+                //     paddingBottom: 16,
+                //   }}
+                //   showsVerticalScrollIndicator={true}
+                //   style={{
+                //     maxHeight: screenHeight * 0.4,
+                //   }}
+                // />
+                <ActivityIndicator size="small" color="white" />
               ) : agentInstances.length > 0 ? (
                 <FlatList
                   data={agentInstances}

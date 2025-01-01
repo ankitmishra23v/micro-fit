@@ -141,20 +141,21 @@ const OnboardingScreen = () => {
         What do you want to improve?
       </Text>
       {loading ? (
-        <FlatList
-          data={Array(4).fill(null)}
-          keyExtractor={(_, index) => index.toString()}
-          numColumns={2}
-          renderItem={() => <SkeletonCard />}
-          contentContainerStyle={{
-            paddingHorizontal: 12,
-            paddingTop: 8,
-            paddingBottom: 8,
-          }}
-          columnWrapperStyle={{
-            justifyContent: "space-between",
-          }}
-        />
+        // <FlatList
+        //   data={Array(0).fill(null)}
+        //   keyExtractor={(_, index) => index.toString()}
+        //   numColumns={2}
+        //   renderItem={() => <SkeletonCard />}
+        //   contentContainerStyle={{
+        //     paddingHorizontal: 12,
+        //     paddingTop: 8,
+        //     paddingBottom: 8,
+        //   }}
+        //   columnWrapperStyle={{
+        //     justifyContent: "space-between",
+        //   }}
+        // />
+        <ActivityIndicator size="small" color="white" />
       ) : (
         <FlatList
           data={options}
