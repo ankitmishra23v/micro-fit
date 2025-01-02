@@ -17,7 +17,7 @@ import { useAuth } from "@/auth/useAuth";
 const AgentInstance1 = () => {
   const router = useRouter();
   const { firstName, lastName } = useAuth();
-  const { agentInstanceNeoBeta } = useLocalSearchParams();
+  const { agentInstanceNeoBeta, agentName } = useLocalSearchParams();
 
   const [formData, setFormData] = useState({
     name: `${firstName} ${lastName}`,
@@ -51,7 +51,6 @@ const AgentInstance1 = () => {
   };
 
   const handleAgeChange = (value: string) => {
-    // Allow only numeric input for age
     if (/^\d*$/.test(value)) {
       setFormData((prev) => ({
         ...prev,
@@ -63,7 +62,6 @@ const AgentInstance1 = () => {
   const handleSubmit = async () => {
     const { name, country, age, aim } = formData;
 
-    // Validate if country, age, and aim are filled
     if (!name || !country || !age || !aim) {
       toast.error({ title: "Please fill all the fields." });
       return;
@@ -94,7 +92,7 @@ const AgentInstance1 = () => {
         <Ionicons name="chevron-back-sharp" size={24} color="white" />
       </TouchableOpacity>
       <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-        <View className="px-5 ">
+        <View className="px-5">
           <Text className="text-white text-2xl font-bold px-1 mb-4 mt-8">
             Let's create a task
           </Text>
@@ -104,7 +102,7 @@ const AgentInstance1 = () => {
             placeholderTextColor="#777"
             className="bg-[#292929] text-white p-4 rounded-lg mb-4"
             value={formData.name}
-            editable={false} // Disable editing of name field
+            editable={false}
           />
 
           <Text className="text-secondary text-m font-semibold tracking-wider mb-4 uppercase">
@@ -136,21 +134,20 @@ const AgentInstance1 = () => {
             className="bg-[#292929] text-white p-4 rounded-lg mb-4"
             value={formData.age}
             onChangeText={handleAgeChange}
-            keyboardType="numeric" // Ensure the keyboard only shows numbers
+            keyboardType="numeric"
           />
 
-          {/* Label and text field for "Your Aim" section */}
           <Text className="text-secondary text-m font-semibold tracking-wider mb-2 uppercase">
             What is your goal or aim for using this service?
           </Text>
           <TextInput
             placeholder="Your Aim"
             placeholderTextColor="#777"
-            className="bg-[#292929] text-white p-4 rounded-lg mb-4 h-32" // Increased height for multiline
+            className="bg-[#292929] text-white p-4 rounded-lg mb-4 h-32"
             value={formData.aim}
             onChangeText={(value) => handleInputChange("aim", value)}
-            multiline // Allow multiline input
-            textAlignVertical="top" // Ensure text starts from the top
+            multiline
+            textAlignVertical="top"
           />
 
           <TouchableOpacity

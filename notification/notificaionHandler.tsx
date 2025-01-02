@@ -2,7 +2,6 @@ import messaging from "@react-native-firebase/messaging";
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { useNotification } from "@/notification/notificationContext";
-import { Alert } from "react-native";
 
 const NotificationHandler = () => {
   const router = useRouter();
@@ -38,7 +37,7 @@ const NotificationHandler = () => {
     if (initialNotification) {
       setTimeout(() => {
         if (!hasNavigated) {
-          handleNotificationNavigation(initialNotification?.data || {});
+          handleNotificationNavigation(initialNotification);
           setHasNavigated(true);
         }
       }, 3500);

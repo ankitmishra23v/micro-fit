@@ -81,7 +81,12 @@ const OnboardingScreen = () => {
     } else if (agentName === "Neo Beta v1") {
       router.push({
         pathname: "/screens/onboarding/agentInstance1/[agentInstanceNeoBeta]",
-        params: { agentInstanceNeoBeta: agentId },
+        params: { agentInstanceNeoBeta: agentId, agentName },
+      });
+    } else {
+      router.push({
+        pathname: "/screens/onboarding/agentInstance2/[agentInstance2]",
+        params: { agentInstance2: agentId, agentName },
       });
     }
   };

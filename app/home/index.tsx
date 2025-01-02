@@ -132,7 +132,7 @@ const HomeScreen = () => {
           />
         </View>
         <View className="flex-1">
-          <Text className="text-white text-xl font-bold uppercase">
+          <Text className="text-white text-l mb-2 font-bold uppercase">
             {item?.agentData?.name}
           </Text>
           <Text className="text-secondary text-md flex-wrap w-full">
