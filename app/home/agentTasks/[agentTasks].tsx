@@ -14,6 +14,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Checkbox from "expo-checkbox";
 import { getFormattedUTCDate } from "@/components/constant";
 import { toast } from "@/components/ToastManager";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 
 const AgentTasksScreen = () => {
   const { agentTasks: instanceId } = useLocalSearchParams();
@@ -29,6 +30,17 @@ const AgentTasksScreen = () => {
   const [checkedTasks, setCheckedTasks] = useState<{ [key: string]: boolean }>(
     {}
   );
+
+  useEffect(() => {
+    const loadSelectedTab = async () => {
+      const savedTab = await AsyncStorage.getItem("selectedTab");
+      if (savedTab) {
+        setSelectedTab(savedTab === "yesterday" ? "yesterday" : "today");
+      }
+    };
+
+    loadSelectedTab();
+  }, []);
 
   useEffect(() => {
     const fetchInstanceDetails = async () => {
@@ -85,25 +97,30 @@ const AgentTasksScreen = () => {
     setCheckedTasks((prev) => ({ ...prev, [taskId]: !prev[taskId] }));
   };
 
+  const handleTabChange = async (tab: "today" | "yesterday") => {
+    setSelectedTab(tab);
+    await AsyncStorage.setItem("selectedTab", tab); // Save the selected tab to AsyncStorage
+  };
+
   const renderTask = ({ item }: { item: any }) => {
     const isChecked = checkedTasks[item._id] || false;
 
     return (
-      <View className="flex-row items-center justify-between bg-black px-4 py-5 rounded-lg mb-4">
-        <View className="flex-row items-center flex-1">
+      <View className="bg-black px-4 py-5 rounded-lg mb-4">
+        <View className="flex-row items-center justify-between">
           <Checkbox
             value={isChecked}
-            onValueChange={() => toggleCheckbox(item._id)}
-            color={isChecked ? "#00FF00" : "#FFFFFF"}
+            onValueChange={() => {}}
+            color={isChecked ? "orange" : "#FFFFFF"}
           />
           <TouchableOpacity
-            className="ml-4"
+            className="flex-1 ml-4"
             onPress={() => {
               const hasSubdata =
                 Array.isArray(item.subdata) && item.subdata.length > 0;
 
-              const taskId = item._id; // Parent task _id
-              const subdataFirstId = hasSubdata ? item.subdata[0]._id : null; // First subdata _id
+              const taskId = item._id;
+              const subdataFirstId = hasSubdata ? item.subdata[0]._id : null;
 
               const action = hasSubdata
                 ? item.subdata[0]?.action === true
@@ -122,6 +139,7 @@ const AgentTasksScreen = () => {
                 pathname: "/home/agentTasks/taskDetails/[taskDetails]",
                 params: {
                   taskDetails: item.taskContextName,
+                  name: item.name,
                   instanceId,
                   taskId,
                   subdataFirstId,
@@ -134,30 +152,30 @@ const AgentTasksScreen = () => {
           >
             <Text className="text-white text-lg">{item.name}</Text>
           </TouchableOpacity>
+
+          {item.feedbackCount > 0 && (
+            <TouchableOpacity
+              className="px-4 rounded-lg"
+              onPress={() =>
+                router.push({
+                  pathname: "/home/agentTasks/taskFeedback/[taskFeedback]",
+                  params: {
+                    taskFeedback: item.name,
+                    instanceId,
+                  },
+                })
+              }
+            >
+              <MaterialIcons name="feedback" size={28} color="#CDCDCD" />
+            </TouchableOpacity>
+          )}
         </View>
-        {item.feedbackCount > 0 && (
-          <TouchableOpacity
-            className="px-4 rounded-lg"
-            onPress={() =>
-              router.push({
-                pathname: "/home/agentTasks/taskFeedback/[taskFeedback]",
-                params: {
-                  taskFeedback: item.name,
-                  instanceId,
-                },
-              })
-            }
-          >
-            <MaterialIcons name="feedback" size={28} color="#CDCDCD" />
-          </TouchableOpacity>
-        )}
       </View>
     );
   };
 
   return (
-    <SafeAreaView className="bg-black flex flex-col justify-start  gap-8 h-full pb-[4%]">
-      {/* Header */}
+    <SafeAreaView className="bg-black flex flex-col justify-start gap-8 h-full pb-[4%]">
       <View className="flex flex-row items-center justify-between px-[4%] pt-4">
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={28} color="white" />
@@ -167,7 +185,6 @@ const AgentTasksScreen = () => {
         </Text>
         <Ionicons name="ellipsis-vertical" size={24} color="white" />
       </View>
-      {/* {!error && ( */}
       <View className="px-[4%] pt-4 ">
         <Text className="text-secondary text-sm uppercase tracking-wider mb-2">
           Goal Progress
@@ -182,15 +199,13 @@ const AgentTasksScreen = () => {
           </Text>
         </View>
       </View>
-      {/* )} */}
 
-      {/* Tabs */}
       <View className="mx-[4%] flex-row justify-between mt-[2%] bg-[#101010] rounded-lg px-3 py-1.5">
         <TouchableOpacity
           className={`w-1/2 py-2 items-center rounded-xl ${
             selectedTab === "yesterday" ? "bg-primary" : "bg-transparent"
           }`}
-          onPress={() => setSelectedTab("yesterday")}
+          onPress={() => handleTabChange("yesterday")}
         >
           <Text
             className={`uppercase text-sm tracking-wider ${
@@ -206,7 +221,7 @@ const AgentTasksScreen = () => {
           className={`w-1/2 py-2 items-center rounded-xl ${
             selectedTab === "today" ? "bg-primary" : "bg-transparent"
           }`}
-          onPress={() => setSelectedTab("today")}
+          onPress={() => handleTabChange("today")}
         >
           <Text
             className={`uppercase text-sm tracking-wider ${
@@ -220,9 +235,8 @@ const AgentTasksScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Task List */}
       <View
-        className={`px-[4%] py-[6%] mx-[4%] mt-[5%] h-1/2 bg-primary rounded-lg flex flex-col gap-4 mt-4`}
+        className={`px-[4%] py-[6%] mx-[4%] mt-[5%] h-1/2 bg-primary rounded-lg flex flex-col gap-4 `}
       >
         {loading ? (
           <ActivityIndicator size="large" color="#FFFFFF" />
@@ -238,14 +252,6 @@ const AgentTasksScreen = () => {
             contentContainerStyle={{ paddingBottom: 16 }}
           />
         )}
-        {/* Complete All Button */}
-        <View className={`${loading ? "hidden" : "block"}`}>
-          <TouchableOpacity className="bg-[#2C2C2E] py-3 rounded-lg mt-6">
-            <Text className="text-white text-center uppercase text-md tracking-wider">
-              Complete All
-            </Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </SafeAreaView>
   );

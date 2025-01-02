@@ -14,9 +14,17 @@ import betterSleepImage from "@/assets/images/MoonStars.png";
 import { getAllAgents } from "@/services/utilities/api";
 import { toast } from "@/components/ToastManager";
 
+const SkeletonCard = () => (
+  <View className="bg-primary rounded-xl m-2 w-[45%] h-[180px] p-4 justify-between animate-pulse">
+    <View className="bg-gray-500 h-6 w-3/4 rounded-md" />
+    <View className="bg-gray-500 h-[50%] rounded-md mt-4" />
+  </View>
+);
+
 const OnboardingScreen = () => {
   const [options, setOptions] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<boolean>(false);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
@@ -41,7 +49,9 @@ const OnboardingScreen = () => {
         setHasMore(false);
       }
     } catch (error) {
+      setError(true);
       toast.error({ title: "Failed to fetch agents" });
+      setLoading(false);
     } finally {
       if (isInitialFetch) {
         setLoading(false);
@@ -71,7 +81,12 @@ const OnboardingScreen = () => {
     } else if (agentName === "Neo Beta v1") {
       router.push({
         pathname: "/screens/onboarding/agentInstance1/[agentInstanceNeoBeta]",
-        params: { agentInstanceNeoBeta: agentId },
+        params: { agentInstanceNeoBeta: agentId, agentName },
+      });
+    } else {
+      router.push({
+        pathname: "/screens/onboarding/agentInstance2/[agentInstance2]",
+        params: { agentInstance2: agentId, agentName },
       });
     }
   };
@@ -106,7 +121,7 @@ const OnboardingScreen = () => {
         />
       );
     }
-    if (hasMore && !loading) {
+    if (hasMore && !loading && !error) {
       return (
         <TouchableOpacity
           className="bg-secondary rounded-lg py-2 px-4 mx-auto mb-4 mt-4 w-[40%]"
@@ -120,33 +135,48 @@ const OnboardingScreen = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-black">
+    <SafeAreaView className="flex-1 bg-black ">
       <TouchableOpacity
-        className="pt-[5%] px-5"
+        className="pt-[5%] px-[4%] "
         onPress={() => router.push("/home")}
       >
         <Ionicons name="chevron-back-sharp" size={24} color="white" />
       </TouchableOpacity>
-      <FlatList
-        data={options}
-        keyExtractor={(item) => item._id.toString()}
-        numColumns={2}
-        renderItem={renderOption}
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingTop: 8,
-          paddingBottom: 8,
-        }}
-        columnWrapperStyle={{
-          justifyContent: "space-between",
-        }}
-        ListHeaderComponent={
-          <Text className="text-[3vh] text-secondary font-bold px-[4%] mt-6 mb-[8%]">
-            What do you want to improve?
-          </Text>
-        }
-        ListFooterComponent={renderFooter}
-      />
+      <Text className="text-[3vh] text-secondary font-bold px-[4%]  mt-6 mb-[8%]">
+        What do you want to improve?
+      </Text>
+      {loading ? (
+        <FlatList
+          data={Array(4).fill(null)}
+          keyExtractor={(_, index) => index.toString()}
+          numColumns={2}
+          renderItem={() => <SkeletonCard />}
+          contentContainerStyle={{
+            paddingHorizontal: 12,
+            paddingTop: 8,
+            paddingBottom: 8,
+          }}
+          columnWrapperStyle={{
+            justifyContent: "space-between",
+          }}
+        />
+      ) : (
+        <FlatList
+          data={options}
+          keyExtractor={(item) => item._id.toString()}
+          numColumns={2}
+          renderItem={renderOption}
+          contentContainerStyle={{
+            paddingHorizontal: 12,
+            paddingTop: 8,
+            paddingBottom: 8,
+          }}
+          columnWrapperStyle={{
+            justifyContent: "space-between",
+          }}
+          ListFooterComponent={renderFooter}
+        />
+      )}
     </SafeAreaView>
   );
 };

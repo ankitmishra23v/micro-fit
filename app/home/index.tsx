@@ -6,24 +6,34 @@ import {
   TouchableOpacity,
   SafeAreaView,
   FlatList,
-  ActivityIndicator,
   Dimensions,
   BackHandler,
   Alert,
   TouchableWithoutFeedback,
   Keyboard,
+  ActivityIndicator,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import profileImage from "@/assets/images/user.png";
 import runImage from "@/assets/images/person-running.png";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/auth/useAuth";
-import { useNotification } from "@/notification/notificationContext"; // Import notification context
+import { useNotification } from "@/notification/notificationContext";
 import {
   getAgentInstances,
   deleteAgentInstance,
 } from "@/services/utilities/api";
 import { toast } from "@/components/ToastManager";
+
+const SkeletonCard = () => (
+  <View className="bg-primary flex flex-row px-4 py-3 gap-8 items-center rounded-lg mb-4 animate-pulse">
+    <View className="bg-gray-500 h-[9vh] w-[11vh] flex items-center justify-center rounded-xl" />
+    <View className="flex-1">
+      <View className="bg-gray-500 h-6 w-[70%] rounded-md mb-2" />
+      <View className="bg-gray-500 h-4 w-[90%] rounded-md" />
+    </View>
+  </View>
+);
 
 const HomeScreen = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -66,7 +76,9 @@ const HomeScreen = () => {
           params: {},
         });
         setAgentInstances(response.data || []);
-      } catch (error) {
+      } catch (error: any) {
+        toast.error({ title: error.error });
+        setLoading(false);
         console.error(error);
       } finally {
         setLoading(false);
@@ -76,8 +88,10 @@ const HomeScreen = () => {
   }, [id]);
 
   const handleLogout = async () => {
+    setLoading(true);
     try {
       await logout();
+      setLoading(false);
       router.push("/screens/welcome");
     } catch (error) {
       console.error(error);
@@ -118,10 +132,9 @@ const HomeScreen = () => {
           />
         </View>
         <View className="flex-1">
-          <Text className="text-white text-xl font-bold uppercase">
+          <Text className="text-white text-l mb-2 font-bold uppercase">
             {item?.agentData?.name}
           </Text>
-          {/* Wrap description and ensure it stays inside the card */}
           <Text className="text-secondary text-md flex-wrap w-full">
             {item?.agentData?.description}
           </Text>
@@ -211,9 +224,22 @@ const HomeScreen = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   className="py-4 border-2 border-primary px-4 rounded-xl"
+                  onPress={() => {
+                    // setDrawerOpen(false);
+                    router.push("/home/logs");
+                  }}
+                >
+                  <Text className="text-white text-lg">Agent messages</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="py-4 border-2 border-primary px-4 rounded-xl"
                   onPress={handleLogout}
                 >
-                  <Text className="text-white text-lg">Logout</Text>
+                  {loading ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <Text className="text-white text-lg">Logout</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -295,7 +321,19 @@ const HomeScreen = () => {
                 Your Goals
               </Text>
               {loading ? (
-                <ActivityIndicator size="large" color="#FFFFFF" />
+                <FlatList
+                  data={Array(1).fill(null)}
+                  keyExtractor={(_, index) => index.toString()}
+                  renderItem={() => <SkeletonCard />}
+                  contentContainerStyle={{
+                    gap: 8,
+                    paddingBottom: 16,
+                  }}
+                  showsVerticalScrollIndicator={true}
+                  style={{
+                    maxHeight: screenHeight * 0.4,
+                  }}
+                />
               ) : agentInstances.length > 0 ? (
                 <FlatList
                   data={agentInstances}
@@ -331,6 +369,8 @@ const HomeScreen = () => {
               <Text className="text-white text-center text-lg uppercase">
                 {agentInstances.length > 0
                   ? "Add a goal"
+                  : loading
+                  ? ""
                   : "Add your first goal"}
               </Text>
             </TouchableOpacity>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { ToastComponent } from "./Toast";
 
 type ToastType = "success" | "error" | "warning";
@@ -14,18 +14,39 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [toast, setToast] = useState<ToastProps | null>(null);
+  const [isToastVisible, setIsToastVisible] = useState(false);
 
   showToast = (toastProps: ToastProps) => {
     setToast(toastProps);
-    setTimeout(() => {
-      setToast(null); // Hide toast after 3 seconds
-    }, 2500);
+    setIsToastVisible(true);
   };
+
+  const hideToast = useCallback(() => {
+    setIsToastVisible(false);
+    setTimeout(() => {
+      setToast(null);
+    }, 300);
+  }, []);
+
+  useEffect(() => {
+    if (isToastVisible) {
+      const timer = setTimeout(() => {
+        hideToast();
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [isToastVisible, hideToast]);
 
   return (
     <>
       {children}
-      {toast && <ToastComponent type={toast.type} title={toast.title} />}
+      {toast && isToastVisible && (
+        <ToastComponent
+          type={toast.type}
+          title={toast.title}
+          onClose={hideToast}
+        />
+      )}
     </>
   );
 };

@@ -204,3 +204,16 @@ export const submitOnboardingQuestions = ({
     data,
   });
 };
+
+export const getAllNotifications = ({
+  user_id,
+  params,
+}: {
+  user_id: string;
+  params: any;
+}) => {
+  return http.get({
+    url: makeApiUrl(`user/${user_id}/notifications`),
+    params,
+  });
+};

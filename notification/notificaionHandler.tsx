@@ -1,15 +1,13 @@
 import messaging from "@react-native-firebase/messaging";
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { useNotification } from "@/notification/notificationContext";
-import { Alert } from "react-native";
 
 const NotificationHandler = () => {
   const router = useRouter();
   const { incrementNotificationCount, addNotification } = useNotification();
-  const hasNavigated = useRef(false); // Use useRef for consistent tracking
+  const [hasNavigated, setHasNavigated] = useState(false);
 
-  // Handle navigation based on notification type and payload
   const handleNotificationNavigation = (notification: any) => {
     const data = notification?.data || {};
     const { type, taskKey, instanceId } = data;
@@ -34,28 +32,23 @@ const NotificationHandler = () => {
     }
   };
 
-  // Check if the app was launched via a notification (quit state)
   const checkInitialNotification = async () => {
     const initialNotification = await messaging().getInitialNotification();
     if (initialNotification) {
-      console.log("Initial Notification Data:", initialNotification?.data);
       setTimeout(() => {
-        if (!hasNavigated.current) {
-          handleNotificationNavigation(initialNotification?.data || {});
-          hasNavigated.current = true; // Mark navigation as completed
+        if (!hasNavigated) {
+          handleNotificationNavigation(initialNotification);
+          setHasNavigated(true);
         }
-      }, 3500); // Delay navigation by 3500ms
+      }, 3500);
     }
   };
 
   useEffect(() => {
-    // Check if the app was opened via a notification (quit state)
     checkInitialNotification();
 
-    // Handle foreground notifications
     const unsubscribeOnMessage = messaging().onMessage(
       async (remoteMessage) => {
-        console.log("Foreground Notification:", remoteMessage);
         const messageId = remoteMessage?.messageId || "no-id";
         const notificationPayload = {
           notification: {
@@ -63,45 +56,39 @@ const NotificationHandler = () => {
             body: remoteMessage.notification?.body || "No Body",
           },
           data: remoteMessage.data || {},
+          sentTime: remoteMessage.sentTime,
           messageId,
         };
 
-        incrementNotificationCount(); // Increment the in-app notification counter
-        addNotification(notificationPayload); // Store the notification for app display
+        incrementNotificationCount();
+        addNotification(notificationPayload);
       }
     );
 
-    // Handle notifications when app is opened from background state
     const unsubscribeOnNotificationOpenedApp =
       messaging().onNotificationOpenedApp((remoteMessage) => {
-        console.log("Notification Opened App:", remoteMessage);
         const notificationData = remoteMessage?.data || {};
 
-        // Ensure navigation occurs only once
-        if (!hasNavigated.current) {
+        if (!hasNavigated) {
           handleNotificationNavigation(notificationData);
-          hasNavigated.current = true; // Mark navigation as completed
+          setHasNavigated(true);
         }
       });
 
-    // Handle background notifications
     messaging().setBackgroundMessageHandler(async (remoteMessage) => {
-      console.log("Background Notification:", remoteMessage);
       const notificationData = remoteMessage?.data || {};
 
-      // Ensure navigation occurs only once
-      if (!hasNavigated.current) {
+      if (!hasNavigated) {
         handleNotificationNavigation(notificationData);
-        hasNavigated.current = true; // Mark navigation as completed
+        setHasNavigated(true);
       }
     });
 
     return () => {
-      console.log("Cleaning up notification handlers...");
       unsubscribeOnMessage();
       unsubscribeOnNotificationOpenedApp();
     };
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, [hasNavigated]);
 
   return null;
 };
