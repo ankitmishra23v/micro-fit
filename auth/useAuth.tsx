@@ -18,10 +18,16 @@ interface AuthContextType {
   firstName: string | null;
   lastName: string | null;
   id: string | null;
+  age: number | null;
+  gender: string | null;
+  country: string | null;
   isAuthenticated: () => boolean;
   login: (user: LoginData) => Promise<void>;
   signUp: (user: SignUpData) => Promise<void>;
   logout: () => Promise<void>;
+  setAge: (age: number | null) => void;
+  setGender: (gender: string | null) => void;
+  setCountry: (country: string | null) => void;
 }
 
 type LoginData = {
@@ -51,6 +57,9 @@ const useAuthProvider = () => {
   const [firstName, setFirstName] = useState<string | null>(null);
   const [lastName, setLastName] = useState<string | null>(null);
   const [id, setId] = useState<string | null>(null);
+  const [age, setAge] = useState<number | null>(null);
+  const [gender, setGender] = useState<string | null>(null);
+  const [country, setCountry] = useState<string | null>(null);
   const [hasNotificationPermission, setHasNotificationPermission] =
     useState<boolean>(false);
 
@@ -64,6 +73,9 @@ const useAuthProvider = () => {
           firstName: string;
           lastName: string;
           id: string;
+          age: number | null;
+          country: string;
+          gender: string | null;
         }>(),
       ]);
 
@@ -74,10 +86,16 @@ const useAuthProvider = () => {
         setFirstName(userData.firstName);
         setLastName(userData.lastName);
         setId(userData.id);
+        setAge(userData.age || null);
+        setGender(userData.gender || null);
+        setCountry(userData.country || null);
+
+        if (userData.age === null) {
+          router.replace("/screens/signup/genderscreen");
+        }
       }
     } catch (error) {
       router.push("/screens/welcome");
-      console.error("Error initializing auth:", error);
     }
   };
 
@@ -85,49 +103,33 @@ const useAuthProvider = () => {
     try {
       if (Platform.OS === "ios") {
         const currentPermission = await messaging().hasPermission();
-
         if (
           currentPermission === messaging.AuthorizationStatus.AUTHORIZED ||
           currentPermission === messaging.AuthorizationStatus.PROVISIONAL
         ) {
           return true;
         }
-
         const lastPrompt = await AsyncStorage.getItem(NOTIFICATION_PROMPT_KEY);
         const now = new Date().getTime();
         const delayTime = PROMPT_DELAY_DAYS * 24 * 60 * 60 * 1000;
-
         if (lastPrompt && now - parseInt(lastPrompt, 10) < delayTime) {
           return false;
         }
-
         const authStatus = await messaging().requestPermission();
         await AsyncStorage.setItem(NOTIFICATION_PROMPT_KEY, now.toString());
-
         return (
           authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
           authStatus === messaging.AuthorizationStatus.PROVISIONAL
         );
       }
-
       if (Platform.OS === "android") {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
         );
-
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          return true;
-        } else {
-          return false;
-        }
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
       }
-
       return false;
-    } catch (error) {
-      console.error(
-        "Error checking/requesting notification permissions:",
-        error
-      );
+    } catch {
       return false;
     }
   };
@@ -143,13 +145,10 @@ const useAuthProvider = () => {
     try {
       const deviceType = Platform.OS === "ios" ? "IOS" : "ANDROID";
       const deviceToken = await messaging().getToken();
-
       await submitDeviceDetails({
         data: { accessToken, deviceToken, deviceType },
       });
-    } catch (error) {
-      console.error("Error registering device:", error);
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -163,9 +162,7 @@ const useAuthProvider = () => {
           await submitDeviceDetails({
             data: { accessToken: token, deviceToken: newToken },
           });
-        } catch (error) {
-          console.error("Error updating FCM token:", error);
-        }
+        } catch {}
       }
     });
   }, [hasNotificationPermission]);
@@ -185,6 +182,9 @@ const useAuthProvider = () => {
           firstName: userData.firstName,
           lastName: userData.lastName,
           id: userData._id,
+          age: userData.age || null,
+          country: userData.country || null,
+          gender: userData.gender || null,
         }),
       ]);
 
@@ -194,8 +194,17 @@ const useAuthProvider = () => {
       setFirstName(userData.firstName);
       setLastName(userData.lastName);
       setId(userData._id);
+      setAge(userData.age || null);
+      setGender(userData.gender || null);
+      setCountry(userData.country || null);
 
       await registerDevice(accessToken);
+
+      if (userData.age && userData.country && userData.gender) {
+        router.replace("/home");
+      } else {
+        router.replace("/screens/signup/genderscreen");
+      }
     } catch (error: any) {
       throw new Error(error?.data?.message || "Login failed.");
     }
@@ -219,7 +228,10 @@ const useAuthProvider = () => {
       setFirstName(null);
       setLastName(null);
       setId(null);
-    } catch (error) {
+      setAge(null);
+      setGender(null);
+      setCountry(null);
+    } catch {
       throw new Error("Logout failed.");
     }
   };
@@ -231,10 +243,16 @@ const useAuthProvider = () => {
     firstName,
     lastName,
     id,
+    age,
+    gender,
+    country,
     isAuthenticated,
     login,
     signUp,
     logout,
+    setAge,
+    setGender,
+    setCountry,
   };
 };
 

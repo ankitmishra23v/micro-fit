@@ -2,6 +2,7 @@ import messaging from "@react-native-firebase/messaging";
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { useNotification } from "@/notification/notificationContext";
+import { Alert } from "react-native";
 
 const NotificationHandler = () => {
   const router = useRouter();
@@ -49,6 +50,7 @@ const NotificationHandler = () => {
 
     const unsubscribeOnMessage = messaging().onMessage(
       async (remoteMessage) => {
+        console.log("Message", remoteMessage);
         const messageId = remoteMessage?.messageId || "no-id";
         const notificationPayload = {
           notification: {

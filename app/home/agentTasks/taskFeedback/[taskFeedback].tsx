@@ -18,9 +18,10 @@ import { getScalFeedback, submitScalFeedback } from "@/services/utilities/api";
 import { toast } from "@/components/ToastManager";
 
 const TaskFeedback = () => {
-  const { taskFeedback, instanceId } = useLocalSearchParams();
+  const { taskFeedback, name, instanceId } = useLocalSearchParams();
   const router = useRouter();
   const taskName = taskFeedback as string;
+  const nameOfTask = name as string;
   const instance = instanceId as string;
 
   const [questions, setQuestions] = useState<any[]>([]);
@@ -44,6 +45,7 @@ const TaskFeedback = () => {
         });
 
         const feedbackData = response.data[0];
+        console.log("FEEEDDDBACKKK : ", feedbackData);
         setFeedbackId(feedbackData._id);
         const allQuestions = feedbackData.questionAnswer.map((qa: any) => ({
           id: qa._id,
@@ -92,10 +94,11 @@ const TaskFeedback = () => {
       toast.success({
         title: "Yay! Your feedback has been submitted successfully",
       });
-      console.log("Feedback submitted successfully!", response.data);
+
       router.back();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting feedback:", error);
+      toast.error({ title: error.error });
     } finally {
       setSubmitting(false);
     }
@@ -120,7 +123,7 @@ const TaskFeedback = () => {
             <Text className="text-secondary text-xl font-bold mt-8 px-4">
               Please give your valuable feedback for task{" "}
               <Text className="text-orange-500 uppercase tracking-wider text-center">
-                {taskName}
+                {nameOfTask}
               </Text>
             </Text>
 

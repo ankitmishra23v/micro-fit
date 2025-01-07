@@ -39,7 +39,7 @@ const OnboardingScreen = () => {
     }
     try {
       const response: any = await getAllAgents({
-        params: { page: currentPage, limit: 10 },
+        params: { page: currentPage, limit: 10, active: true },
       });
       const { data, pagination } = response;
       setOptions((prevOptions) =>
@@ -72,13 +72,17 @@ const OnboardingScreen = () => {
     fetchOptions(nextPage, false);
   };
 
-  const handleAgentPress = (agentId: string, agentName: string) => {
-    if (agentName === "Better sleep") {
+  const handleAgentPress = (
+    agentId: string,
+    agentName: string,
+    agentContextName: string
+  ) => {
+    if (agentName === "Better sleep" || agentContextName === "better-sleep") {
       router.push({
         pathname: "/screens/onboarding/[agentInstance]",
         params: { agentInstance: agentId },
       });
-    } else if (agentName === "Neo Beta v1") {
+    } else if (agentName === "Neo Beta v1" || agentContextName === "neo-beta") {
       router.push({
         pathname: "/screens/onboarding/agentInstance1/[agentInstanceNeoBeta]",
         params: { agentInstanceNeoBeta: agentId, agentName },
@@ -86,7 +90,7 @@ const OnboardingScreen = () => {
     } else {
       router.push({
         pathname: "/screens/onboarding/agentInstance2/[agentInstance2]",
-        params: { agentInstance2: agentId, agentName },
+        params: { agentInstance2: agentId, agentName, agentContextName },
       });
     }
   };
@@ -95,10 +99,12 @@ const OnboardingScreen = () => {
     <TouchableOpacity
       className="bg-primary rounded-xl flex justify-center px-2 m-2 overflow-hidden"
       style={{ width: "45%", aspectRatio: 0.85 }}
-      onPress={() => handleAgentPress(item._id, item.name)}
+      onPress={() =>
+        handleAgentPress(item._id, item.name, item.agentContextName)
+      }
     >
       <View className="h-[45%]">
-        <Text className="text-[1.5rem] pl-2 font-bold text-white mt-2 uppercase">
+        <Text className="text-[1.3rem] pl-2 font-bold text-white mt-2 uppercase">
           {item.name}
         </Text>
       </View>

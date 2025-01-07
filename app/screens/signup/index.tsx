@@ -66,7 +66,7 @@ const SignupScreen = () => {
     const payload = {
       email,
       firstName,
-      lastName, // Include Last Name in the payload
+      lastName,
       password,
       loginType: "system",
     };
@@ -74,7 +74,7 @@ const SignupScreen = () => {
     try {
       await signUp(payload);
       toast.success({ title: "Account created successfully!" });
-      router.push("/screens/signup/genderscreen");
+      router.push("/screens/login");
     } catch (err: any) {
       const errorMessage = err?.message || "An unexpected error occurred!";
       toast.error({ title: errorMessage });
@@ -172,8 +172,8 @@ const SignupScreen = () => {
                   className="h-12 border border-gray-600 rounded-lg mb-4 px-4 text-white"
                   placeholder="Last Name"
                   placeholderTextColor="#aaa"
-                  value={lastName} // Bind the lastName state
-                  onChangeText={handleChange(setLastName)} // Set Last Name
+                  value={lastName}
+                  onChangeText={handleChange(setLastName)}
                 />
               </View>
               <TouchableOpacity

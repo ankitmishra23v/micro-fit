@@ -4,7 +4,7 @@ import { router } from "expo-router";
 
 const TIMEOUT = 3600000;
 const CONTENT_TYPE_JSON = "application/json";
-const REFRESH_TOKEN_URL = `${process.env.EXPO_PUBLIC_REACT_NATIVE_APP_API_BASE_URL}auth/refresh`;
+const REFRESH_TOKEN_URL = `${process.env.EXPO_PUBLIC_REACT_NATIVE_APP_API_BASE_URL}users/refresh-token`;
 
 const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_REACT_NATIVE_APP_API_BASE_URL,
