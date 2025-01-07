@@ -102,6 +102,24 @@ const AgentTasksScreen = () => {
     await AsyncStorage.setItem("selectedTab", tab); // Save the selected tab to AsyncStorage
   };
 
+  const renderSkeleton = () => {
+    return (
+      <View className="flex-1">
+        {[...Array(3)].map((_, index) => (
+          <View key={index} className="bg-black px-4 py-5 rounded-lg mb-4">
+            <View className="flex-row items-center justify-between">
+              <View className="w-6 h-6 bg-primary rounded-full"></View>
+
+              <View className="flex-1 ml-4">
+                <View className="h-5 bg-primary rounded mb-2"></View>
+              </View>
+            </View>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   const renderTask = ({ item }: { item: any }) => {
     const isChecked = checkedTasks[item._id] || false;
 
@@ -160,7 +178,8 @@ const AgentTasksScreen = () => {
                 router.push({
                   pathname: "/home/agentTasks/taskFeedback/[taskFeedback]",
                   params: {
-                    taskFeedback: item.name,
+                    taskFeedback: item.taskContextName,
+                    name: item.name,
                     instanceId,
                   },
                 })
@@ -239,8 +258,9 @@ const AgentTasksScreen = () => {
         className={`px-[4%] py-[6%] mx-[4%] mt-[5%] h-1/2 bg-primary rounded-lg flex flex-col gap-4 `}
       >
         {loading ? (
-          <ActivityIndicator size="large" color="#FFFFFF" />
-        ) : error || tasks.length === 0 ? (
+          renderSkeleton()
+        ) : // <ActivityIndicator size="large" color="#FFFFFF" />
+        error || tasks.length === 0 ? (
           <View className="flex-1 justify-center items-center">
             <Text className="text-white text-lg">No tasks available</Text>
           </View>

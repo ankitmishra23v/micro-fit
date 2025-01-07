@@ -16,7 +16,7 @@ const NotificationScreen = () => {
 
   const handleNotificationNavigation = (notification: any) => {
     const data = notification?.data || {};
-    const { type, taskKey, instanceId } = data;
+    const { type, taskKey, instanceId, name } = data;
 
     markNotificationAsRead(notification.notificationId);
 
@@ -30,9 +30,11 @@ const NotificationScreen = () => {
         pathname: "/home/agentTasks/taskFeedback/[taskFeedback]",
         params: {
           taskFeedback: taskKey,
+          name,
           instanceId,
         },
       });
+      //router.push("/home");
     } else if (type === "ONBOARD_QUESTIONS") {
       router.push("/screens/onboarding/onboardQuestions");
     } else {

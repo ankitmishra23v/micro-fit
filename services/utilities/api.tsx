@@ -14,6 +14,16 @@ export const signUp = ({ data }: { data: Record<string, any> }) => {
   });
 };
 
+export const UpdateUserDetails = ({
+  data,
+  userId,
+}: {
+  data: Record<string, any>;
+  userId: string;
+}) => {
+  return http.put({ url: makeApiUrl(`users/${userId}`), data });
+};
+
 export const logIn = ({ data }: { data: Record<string, any> }) => {
   return http.post({
     url: makeApiUrl("users/login"),

@@ -132,8 +132,6 @@ const TaskDetails = () => {
           instace_id: instance,
         });
 
-        console.log("NEO response: ", response);
-
         toast.success({
           title: response?.data?.message || "Task marked as completed!",
         });
@@ -302,8 +300,8 @@ const TaskDetails = () => {
           <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
             <View className="flex-1 justify-center items-center bg-primary opacity-95">
               <View className="bg-primary w-11/12 rounded-lg p-6">
-                <Text className="text-white text-lg font-semibold mb-4 text-center">
-                  What’s the issue?
+                <Text className="text-white text-m font-semibold mb-4 text-center">
+                  Got any concerns or feedback about your task?
                 </Text>
                 <TextInput
                   className="h-32 border border-gray-600 rounded-lg p-4 text-white bg-black"

@@ -32,7 +32,6 @@ const LoginScreen = () => {
     setLoading(true);
     try {
       await login({ email, password });
-      router.replace("/home");
     } catch (err: any) {
       const errorMessage =
         err.message || "An error occurred. Please try again.";

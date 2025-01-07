@@ -40,13 +40,13 @@ const AgentInstanceOnboard = () => {
   useEffect(() => {
     Animated.timing(translateY, {
       toValue: 0,
-      duration: 1200,
+      duration: 700,
       useNativeDriver: true,
     }).start();
 
     Animated.timing(opacity, {
       toValue: 1,
-      duration: 1200,
+      duration: 700,
       useNativeDriver: true,
     }).start();
   }, [currentIndex]);
@@ -87,7 +87,7 @@ const AgentInstanceOnboard = () => {
 
         Animated.timing(opacity, {
           toValue: 1,
-          duration: 1200,
+          duration: 700,
           useNativeDriver: true,
         }).start();
       });
@@ -179,7 +179,7 @@ const AgentInstanceOnboard = () => {
             contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
             keyboardShouldPersistTaps="handled"
           >
-            <View className="px-4">
+            <View className="px-5">
               {!isComplete && (
                 <Animated.View
                   style={{
