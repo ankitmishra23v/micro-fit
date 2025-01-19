@@ -106,12 +106,12 @@ const AgentTasksScreen = () => {
     return (
       <View className="flex-1">
         {[...Array(3)].map((_, index) => (
-          <View key={index} className="bg-black px-4 py-5 rounded-lg mb-4">
-            <View className="flex-row items-center justify-between">
-              <View className="w-6 h-6 bg-primary rounded-full"></View>
+          <View key={index} className="bg-black px-4 py-5 rounded-lg mb-4 ">
+            <View className="flex-row items-center justify-between animate-pulse">
+              <View className="w-6 h-6 bg-primary rounded-full animate-pulse"></View>
 
               <View className="flex-1 ml-4">
-                <View className="h-5 bg-primary rounded mb-2"></View>
+                <View className="h-5 bg-primary rounded mb-2 animate-pulse"></View>
               </View>
             </View>
           </View>

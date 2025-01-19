@@ -37,12 +37,12 @@ export const logout = () => {
   });
 };
 
-export const refreshToken = ({ data }: { data: Record<string, any> }) => {
-  return http.post({
-    url: makeApiUrl("users/refresh-token"),
-    data,
-  });
-};
+// export const refreshToken = ({ data }: { data: Record<string, any> }) => {
+//   return http.post({
+//     url: makeApiUrl("users/refresh-token"),
+//     data,
+//   });
+// };
 
 export const getAllAgents = ({ params }: { params?: any } = {}) => {
   return http.get({
