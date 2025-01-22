@@ -26,7 +26,6 @@ const addRefreshSubscriber = (callback: (token: string) => void) => {
 };
 
 const handleTokenRefreshError = async () => {
-  console.error("Refresh token expired or invalid. Logging out...");
   await Storage.clear();
   router.push("/screens/welcome");
 };
@@ -43,21 +42,13 @@ const refreshAuthToken = async () => {
   isRefreshing = true;
   try {
     const refreshToken = await Storage.getRefreshToken();
-    const accessToken = await Storage.getAuthToken();
     if (!refreshToken) throw new Error("Refresh token missing");
 
     const response = await axios.post(
       REFRESH_TOKEN_URL,
       { refreshToken },
-      {
-        headers: {
-          "Content-Type": CONTENT_TYPE_JSON,
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
+      { headers: { "Content-Type": CONTENT_TYPE_JSON } }
     );
-
-    console.log("TOken refreshed ", response.data.data);
 
     const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
       response.data.data;
@@ -80,16 +71,31 @@ const refreshAuthToken = async () => {
   }
 };
 
-// Request interceptor: Check if the token is about to expire before making a request
 api.interceptors.request.use(
   async (config: any) => {
     const accessToken = await Storage.getAuthToken();
 
-    if (accessToken) {
-      if (isTokenExpired(accessToken)) {
-        await refreshAuthToken();
-      }
+    const isLoginOrRefresh = ["login", "refresh-token"].some((endpoint) =>
+      config.url?.includes(endpoint)
+    );
 
+    if (isLoginOrRefresh) {
+      return config;
+    }
+
+    if (accessToken && isTokenExpired(accessToken)) {
+      try {
+        await refreshAuthToken();
+        const newAccessToken = await Storage.getAuthToken();
+        config.headers.Authorization = `Bearer ${newAccessToken}`;
+      } catch (error) {
+        console.error(
+          "Token refresh failed during request interception:",
+          error
+        );
+        throw error;
+      }
+    } else if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
 
@@ -98,60 +104,44 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor: Handle 401 error when access token expires
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest: any = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve) => {
-          addRefreshSubscriber((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            resolve(api(originalRequest));
-          });
-        });
+    if (error.response?.status === 401) {
+      const isLoginRequest = originalRequest.url?.includes("login");
+
+      if (isLoginRequest) {
+        return Promise.reject(error);
       }
 
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        const refreshToken = await Storage.getRefreshToken();
-        const accessToken = await Storage.getAuthToken();
-        if (!refreshToken) throw new Error("Refresh token missing");
-        const response = await axios.post(
-          REFRESH_TOKEN_URL,
-          { refreshToken },
-          {
-            headers: {
-              "Content-Type": CONTENT_TYPE_JSON,
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        );
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-          response.data.data;
-
-        if (!newAccessToken || !newRefreshToken) {
-          throw new Error("Invalid token response");
+      if (!originalRequest._retry) {
+        if (isRefreshing) {
+          return new Promise((resolve) => {
+            addRefreshSubscriber((token) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              resolve(api(originalRequest));
+            });
+          });
         }
 
-        await Promise.all([
-          Storage.setAuthToken(newAccessToken),
-          Storage.setRefreshToken(newRefreshToken),
-        ]);
+        originalRequest._retry = true;
 
-        isRefreshing = false;
-        onTokenRefreshed(newAccessToken);
-
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        isRefreshing = false;
-        await handleTokenRefreshError();
-        return Promise.reject(refreshError);
+        try {
+          console.log("Refreshing token after 401 response...");
+          await refreshAuthToken();
+          const newAccessToken = await Storage.getAuthToken();
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return api(originalRequest);
+        } catch (refreshError) {
+          console.error(
+            "Token refresh failed after 401 response:",
+            refreshError
+          );
+          await handleTokenRefreshError();
+          return Promise.reject(refreshError);
+        }
       }
     }
 

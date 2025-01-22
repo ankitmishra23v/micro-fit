@@ -206,7 +206,8 @@ const useAuthProvider = () => {
         router.replace("/screens/signup/genderscreen");
       }
     } catch (error: any) {
-      throw new Error(error?.data?.message || "Login failed.");
+      console.log("ereerere ", error);
+      throw new Error(error?.data?.message);
     }
   };
 

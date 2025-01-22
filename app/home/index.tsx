@@ -93,8 +93,8 @@ const HomeScreen = () => {
       await logout();
       setLoading(false);
       router.push("/screens/welcome");
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      toast.error({ title: error.error });
     }
   };
 

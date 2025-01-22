@@ -33,6 +33,7 @@ const LoginScreen = () => {
     try {
       await login({ email, password });
     } catch (err: any) {
+      console.log("ERRRRR ", err);
       const errorMessage =
         err.message || "An error occurred. Please try again.";
       toast.error({ title: errorMessage });
